@@ -1,0 +1,13 @@
+[package]
+name = "bootloader-from-scratch-in-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[profile.release]
+panic = "abort"
+lto = true
+debug = false
+opt-level = "z"
+codegen-units = 1
