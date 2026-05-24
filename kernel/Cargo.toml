@@ -1,5 +1,5 @@
 [package]
-name = "bootloader-from-scratch-in-rust"
+name = "kernel"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,3 +11,6 @@ lto = true
 debug = false
 opt-level = "z"
 codegen-units = 1
+
+[profile.dev]
+panic = "abort"
