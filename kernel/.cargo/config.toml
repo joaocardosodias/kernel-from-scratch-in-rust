@@ -2,4 +2,8 @@
 target = "x86_64-unknown-none"
 
 [target.x86_64-unknown-none]
-rustflags = ["-C", "link-arg=-Tlinker.ld"]
+rustflags = [
+    "-C", "link-arg=-Tlinker.ld",
+    "-C", "link-arg=-no-pie",
+    "-C", "link-arg=--no-dynamic-linker",
+]

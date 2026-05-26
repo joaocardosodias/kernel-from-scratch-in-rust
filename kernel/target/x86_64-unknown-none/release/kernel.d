@@ -1,0 +1,1 @@
+/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/release/kernel: /home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/main.rs /home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/vga.rs

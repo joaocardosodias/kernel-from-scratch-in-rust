@@ -3,16 +3,27 @@
 
 _start:
     cli
-    xor  ax, ax
+    mov [drive_num], dl
+    xor ax, ax
     mov ds, ax
     mov es, ax
     mov ss, ax
     mov sp, 0x7E00
     sti
 
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
+    mov ax, 0x2401
+    int 0x15
+
+    mov ah, 0x02
+    mov al, 32
+    mov ch, 0
+    mov cl, 3
+    mov dh, 0
+    mov dl, [drive_num]
+    mov bx, 0x2000
+    mov es, bx
+    xor bx, bx
+    int 0x13
 
     lgdt [gdt_ptr]
     cli
@@ -21,8 +32,7 @@ _start:
     mov cr0, eax
     jmp 0x08:protected_mode
 
-msg:     db "Boot OK", 0
-msg_len  equ $ - msg
+drive_num: db 0
 
 gdt_start:
     dq 0
@@ -102,17 +112,11 @@ long_mode:
     mov ds, ax
     mov es, ax
     mov ss, ax
+    mov rsp, 0x90000
+    mov rsi, 0x20000
+    mov rdi, 0x100000
+    mov rcx, 16384
+    rep movsb
 
-    mov rdi, 0xB8000
-    mov rsi, msg
-    mov rcx, msg_len - 1
-.write:
-    mov al, [rsi]
-    mov [rdi], al
-    mov byte [rdi+1], 0x07
-    add rdi, 2
-    add rsi, 1
-    loop .write
-
-    cli
-    jmp $
+    mov rax, 0x100000
+    jmp rax
