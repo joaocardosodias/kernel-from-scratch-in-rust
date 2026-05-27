@@ -92,6 +92,7 @@ impl Writer {
         self.column += 1;
         if self.column >= BUFFER_WIDTH {
             self.column = 0;
+            self.row += 1;
         }
         if self.row >= BUFFER_HEIGHT {
             for i in 0..(BUFFER_HEIGHT - 1) {

@@ -42,7 +42,9 @@ $(DISK_IMG): $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN)
 	cat $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN) > $@
 	truncate -s %512 $@ 
 
-run: $(DISK_IMG) $(KERNEL_BIN)
+run:
+	$(MAKE) clean
+	$(MAKE) all
 	$(QEMU) $(QEMU_FLAGS)
 
 clean:
