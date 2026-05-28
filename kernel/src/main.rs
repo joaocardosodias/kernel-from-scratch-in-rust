@@ -1,12 +1,12 @@
 #![no_std]
 #![no_main]
 #![feature(abi_x86_interrupt)]
-use core::fmt::Write;
+
 use core::panic::PanicInfo;
 pub mod idt;
+pub mod memory;
 pub mod pic;
 pub mod vga;
-
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -34,10 +34,23 @@ pub extern "C" fn _start() -> ! {
     idt.set_entry(32, idt::time_handler as *const () as u64);
     idt.set_entry(33, idt::keyboard_handler as *const () as u64);
     idt.load();
-    unsafe {
-        core::arch::asm!("sti");
+    if let Some(frame) = memory::allocate_memory() {
+        unsafe {
+            let vga = 0xB8000 as *mut u8;
+            vga.write(b'F');
+            vga.add(1).write(0x07);
+        }
+    } else {
+        unsafe {
+            let vga = 0xB8000 as *mut u8;
+            vga.write(b'N'); // None
+            vga.add(1).write(0x07);
+        }
     }
 
-    println!("Pressione uma tecla...");
+    // unsafe {
+    //     core::arch::asm!("sti");
+    // }
+
     loop {}
 }
