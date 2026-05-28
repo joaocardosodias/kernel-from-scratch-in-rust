@@ -1,6 +1,30 @@
+# Rust build artifacts
 /target
+kernel/target
+
+# Build output
 /build
 *.bin
 *.img
-.opencode
-.zed
+*.iso
+*.elf
+
+# IDE and editor files
+.vscode/
+.idea/
+.opencode/
+.zed/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cargo lock (optional - uncomment if you don't want to track it)
+# Cargo.lock
+
+# Debug files
+*.pdb
+*.dSYM/

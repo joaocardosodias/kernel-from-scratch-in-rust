@@ -1,5 +1,5 @@
-   0.069112674s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint: fingerprint error for kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel)/Check { test: true }/TargetInner { name: "kernel", doc: true, ..: with_path("/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/main.rs", Edition2021) }
-   0.069140227s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/kernel-df9bf7b5dbac6eb7/test-bin-kernel`
+   0.055172166s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint: fingerprint error for kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel)/Check { test: true }/TargetInner { name: "kernel", doc: true, ..: with_path("/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/main.rs", Edition2021) }
+   0.055312316s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/kernel-df9bf7b5dbac6eb7/test-bin-kernel`
 
 Caused by:
     No such file or directory (os error 2)
@@ -41,8 +41,8 @@ Stack backtrace:
   24: <unknown>
   25: __libc_start_main
   26: <unknown>
-   0.079847625s  INFO prepare_target{force=false package_id=compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins) target="compiler_builtins"}: cargo::core::compiler::fingerprint: fingerprint error for compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)/Build/TargetInner { name_inferred: true, tested: false, benched: false, doc: false, doctest: false, ..: lib_target("compiler_builtins", ["lib"], "/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins/src/lib.rs", Edition2024) }
-   0.079893530s  INFO prepare_target{force=false package_id=compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins) target="compiler_builtins"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/compiler_builtins-8ce229e6ff02e3b8/lib-compiler_builtins`
+   0.068730904s  INFO prepare_target{force=false package_id=compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins) target="compiler_builtins"}: cargo::core::compiler::fingerprint: fingerprint error for compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)/Build/TargetInner { name_inferred: true, tested: false, benched: false, doc: false, doctest: false, ..: lib_target("compiler_builtins", ["lib"], "/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins/src/lib.rs", Edition2024) }
+   0.068744330s  INFO prepare_target{force=false package_id=compiler_builtins v0.1.160 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins) target="compiler_builtins"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/compiler_builtins-8ce229e6ff02e3b8/lib-compiler_builtins`
 
 Caused by:
     No such file or directory (os error 2)
@@ -85,8 +85,8 @@ Stack backtrace:
   25: <unknown>
   26: __libc_start_main
   27: <unknown>
-   0.080863953s  INFO prepare_target{force=false package_id=core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core) target="core"}: cargo::core::compiler::fingerprint: fingerprint error for core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core)/Build/TargetInner { name_inferred: true, tested: false, benched: false, ..: lib_target("core", ["lib"], "/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/lib.rs", Edition2024) }
-   0.080893237s  INFO prepare_target{force=false package_id=core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core) target="core"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/core-22f6c67bf594f785/lib-core`
+   0.069023643s  INFO prepare_target{force=false package_id=core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core) target="core"}: cargo::core::compiler::fingerprint: fingerprint error for core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core)/Build/TargetInner { name_inferred: true, tested: false, benched: false, ..: lib_target("core", ["lib"], "/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/lib.rs", Edition2024) }
+   0.069043730s  INFO prepare_target{force=false package_id=core v0.0.0 (/home/cardoso/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core) target="core"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/core-22f6c67bf594f785/lib-core`
 
 Caused by:
     No such file or directory (os error 2)
@@ -130,8 +130,8 @@ Stack backtrace:
   26: <unknown>
   27: __libc_start_main
   28: <unknown>
-   0.081320950s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint: fingerprint error for spin v0.12.0/Check { test: false }/TargetInner { ..: lib_target("spin", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.12.0/src/lib.rs", Edition2021) }
-   0.081340341s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/spin-dcae14fc75ebea93/lib-spin`
+   0.069167944s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint: fingerprint error for spin v0.12.0/Check { test: false }/TargetInner { ..: lib_target("spin", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.12.0/src/lib.rs", Edition2021) }
+   0.069172506s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/spin-dcae14fc75ebea93/lib-spin`
 
 Caused by:
     No such file or directory (os error 2)
@@ -174,8 +174,8 @@ Stack backtrace:
   25: <unknown>
   26: __libc_start_main
   27: <unknown>
-   0.081740230s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint: fingerprint error for lock_api v0.4.14/Check { test: false }/TargetInner { ..: lib_target("lock_api", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lock_api-0.4.14/src/lib.rs", Edition2021) }
-   0.081762757s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/lock_api-5d4ffba9596756e7/lib-lock_api`
+   0.069294017s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint: fingerprint error for lock_api v0.4.14/Check { test: false }/TargetInner { ..: lib_target("lock_api", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lock_api-0.4.14/src/lib.rs", Edition2021) }
+   0.069299607s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/lock_api-5d4ffba9596756e7/lib-lock_api`
 
 Caused by:
     No such file or directory (os error 2)
@@ -219,8 +219,8 @@ Stack backtrace:
   26: <unknown>
   27: __libc_start_main
   28: <unknown>
-   0.082272411s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint: fingerprint error for scopeguard v1.2.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("scopeguard", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scopeguard-1.2.0/src/lib.rs", Edition2015) }
-   0.082291506s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/scopeguard-00c77ccaf7634798/lib-scopeguard`
+   0.069405913s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint: fingerprint error for scopeguard v1.2.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("scopeguard", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scopeguard-1.2.0/src/lib.rs", Edition2015) }
+   0.069410069s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/scopeguard-00c77ccaf7634798/lib-scopeguard`
 
 Caused by:
     No such file or directory (os error 2)
@@ -265,8 +265,8 @@ Stack backtrace:
   27: <unknown>
   28: __libc_start_main
   29: <unknown>
-   0.082855559s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint: fingerprint error for kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel)/Check { test: false }/TargetInner { name: "kernel", doc: true, ..: with_path("/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/main.rs", Edition2021) }
-   0.082874734s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/kernel-9e906c95e8a9996c/bin-kernel`
+   0.069583001s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint: fingerprint error for kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel)/Check { test: false }/TargetInner { name: "kernel", doc: true, ..: with_path("/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/src/main.rs", Edition2021) }
+   0.069591238s  INFO prepare_target{force=false package_id=kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel) target="kernel"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/kernel-9e906c95e8a9996c/bin-kernel`
 
 Caused by:
     No such file or directory (os error 2)
@@ -308,8 +308,8 @@ Stack backtrace:
   24: <unknown>
   25: __libc_start_main
   26: <unknown>
-   0.083249372s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint: fingerprint error for spin v0.12.0/Check { test: false }/TargetInner { ..: lib_target("spin", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.12.0/src/lib.rs", Edition2021) }
-   0.083265268s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/spin-b080fecbdde1df24/lib-spin`
+   0.069699160s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint: fingerprint error for spin v0.12.0/Check { test: false }/TargetInner { ..: lib_target("spin", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.12.0/src/lib.rs", Edition2021) }
+   0.069703082s  INFO prepare_target{force=false package_id=spin v0.12.0 target="spin"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/spin-b080fecbdde1df24/lib-spin`
 
 Caused by:
     No such file or directory (os error 2)
@@ -352,8 +352,8 @@ Stack backtrace:
   25: <unknown>
   26: __libc_start_main
   27: <unknown>
-   0.083622420s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint: fingerprint error for lock_api v0.4.14/Check { test: false }/TargetInner { ..: lib_target("lock_api", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lock_api-0.4.14/src/lib.rs", Edition2021) }
-   0.083637812s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/lock_api-e6c1d48b39e2c519/lib-lock_api`
+   0.069814823s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint: fingerprint error for lock_api v0.4.14/Check { test: false }/TargetInner { ..: lib_target("lock_api", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lock_api-0.4.14/src/lib.rs", Edition2021) }
+   0.069820827s  INFO prepare_target{force=false package_id=lock_api v0.4.14 target="lock_api"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/lock_api-e6c1d48b39e2c519/lib-lock_api`
 
 Caused by:
     No such file or directory (os error 2)
@@ -397,8 +397,8 @@ Stack backtrace:
   26: <unknown>
   27: __libc_start_main
   28: <unknown>
-   0.084010468s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint: fingerprint error for scopeguard v1.2.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("scopeguard", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scopeguard-1.2.0/src/lib.rs", Edition2015) }
-   0.084025239s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/scopeguard-1240470f38b0b1cd/lib-scopeguard`
+   0.069921058s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint: fingerprint error for scopeguard v1.2.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("scopeguard", ["lib"], "/home/cardoso/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scopeguard-1.2.0/src/lib.rs", Edition2015) }
+   0.069924817s  INFO prepare_target{force=false package_id=scopeguard v1.2.0 target="scopeguard"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel/target/x86_64-unknown-none/debug/.fingerprint/scopeguard-1240470f38b0b1cd/lib-scopeguard`
 
 Caused by:
     No such file or directory (os error 2)
@@ -450,3 +450,4 @@ Stack backtrace:
     Checking spin v0.12.0
     Checking kernel v0.1.0 (/home/cardoso/GitHub/kernel-from-scratch-in-rust/kernel)
 error: could not compile `kernel` (bin "kernel" test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
