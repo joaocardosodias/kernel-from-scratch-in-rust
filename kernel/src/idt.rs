@@ -49,16 +49,16 @@ pub extern "x86-interrupt" fn keyboard_handler(_stack_frame: &mut InterruptStack
     unsafe {
         let scancode: u8;
         core::arch::asm!("in al, 0x60", out("al") scancode);
-        
+
         let vga = 0xB8000 as *mut u8;
         let low = (scancode & 0x0F) + b'0';
         let high = ((scancode >> 4) & 0x0F) + b'0';
-        
+
         vga.add(0).write(if high <= 57 { high } else { high + 7 });
         vga.add(1).write(0x07);
         vga.add(2).write(if low <= 57 { low } else { low + 7 });
         vga.add(3).write(0x07);
-        
+
         core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);
     }
 }

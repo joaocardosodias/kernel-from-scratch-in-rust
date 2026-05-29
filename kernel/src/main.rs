@@ -3,6 +3,7 @@
 #![feature(abi_x86_interrupt)]
 
 use core::panic::PanicInfo;
+pub mod allocator;
 pub mod idt;
 pub mod memory;
 pub mod pic;
@@ -34,7 +35,7 @@ pub extern "C" fn _start() -> ! {
     idt.set_entry(32, idt::time_handler as *const () as u64);
     idt.set_entry(33, idt::keyboard_handler as *const () as u64);
     idt.load();
-    if let Some(frame) = memory::allocate_memory() {
+    if let Some(_frame) = memory::allocate_memory() {
         unsafe {
             let vga = 0xB8000 as *mut u8;
             vga.write(b'F');
