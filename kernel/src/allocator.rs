@@ -5,14 +5,15 @@ pub struct BumpAllocator {
     end: usize,
 }
 
-
 pub struct LockedAllocator(Mutex<BumpAllocator>);
 
 unsafe impl GlobalAlloc for LockedAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let mut alloc = self.0.lock();
+        
         let aligned = (alloc.current + layout.align() - 1) & !(layout.align() - 1);
         let next = aligned + layout.size();
+
         if next <= alloc.end {
             alloc.current = next;
             aligned as *mut u8
@@ -20,6 +21,7 @@ unsafe impl GlobalAlloc for LockedAllocator {
             core::ptr::null_mut()
         }
     }
+
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {}
 }
 #[global_allocator]

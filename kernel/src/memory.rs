@@ -21,3 +21,28 @@ pub fn allocate_memory() -> Option<usize> {
     }
     None
 }
+
+pub fn map_page(virtual_addr: u64) {
+    let aligned_addr = virtual_addr & !0xFFF;
+
+    let pd = 0x12000 as *mut u64;
+    let pd_index = (aligned_addr >> 21) & 0x1FF;
+    let pt_addr = 0x13000;
+    let pt = pt_addr as *mut u64;
+
+    unsafe {
+        let pd_entry = pd.add(pd_index as usize).read();
+        if (pd_entry & 1) == 0 {
+            for i in 0..512 { pt.add(i).write(0); }
+            pd.add(pd_index as usize).write(pt_addr | 3);
+        }
+    }
+
+    if let Some(phys_frame) = crate::memory::allocate_memory() {
+        let pt_index = (aligned_addr >> 12) & 0x1FF;
+        unsafe {
+            pt.add(pt_index as usize).write((phys_frame as u64) | 3);
+            core::arch::asm!("invlpg [{}]", in(reg) aligned_addr, options(nostack));
+        }
+    }
+}
