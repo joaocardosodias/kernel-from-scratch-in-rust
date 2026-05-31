@@ -33,7 +33,9 @@ pub fn map_page(virtual_addr: u64) {
     unsafe {
         let pd_entry = pd.add(pd_index as usize).read();
         if (pd_entry & 1) == 0 {
-            for i in 0..512 { pt.add(i).write(0); }
+            for i in 0..512 {
+                pt.add(i).write(0);
+            }
             pd.add(pd_index as usize).write(pt_addr | 3);
         }
     }
