@@ -33,18 +33,23 @@ pub extern "C" fn _start() -> ! {
     idt.set_entry(6, idt::invalid_opcode as *const () as u64);
     idt.set_entry(13, idt::general_protection_fault as *const () as u64);
     idt.set_entry(14, idt::page_fault as *const () as u64);
-
     pic::remap(0x20, 0x28);
     idt.set_entry(32, idt::time_handler as *const () as u64);
     idt.set_entry(33, idt::keyboard_handler as *const () as u64);
     idt.load();
 
     unsafe {
-        core::arch::asm!("sti");
+        crate::allocator::ALLOCATOR
+            .0
+            .lock()
+            .init(0x200000, 0x100000);
     }
-    println!("Demand Paging Funcionando!");
-    println!("Box alocado com sucesso!");
-    let _v: Vec<i32> = Vec::new();
-    println!("Vec criado!");
+    println!("init");
+    let b1 = Box::new(100);
+    println!("box 1 alloc");
+    drop(b1);
+    println!("drop and new box");
+    let b2 = Box::new(200);
+    println!("new box");
     loop {}
 }
