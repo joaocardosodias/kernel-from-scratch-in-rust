@@ -6,6 +6,10 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::fmt::Write;
 use core::panic::PanicInfo;
+
+pub const HEAP_START: usize = 0x200000;
+pub const HEAP_SIZE: usize = 0x400000;
+
 pub mod allocator;
 pub mod idt;
 pub mod memory;
@@ -42,14 +46,12 @@ pub extern "C" fn _start() -> ! {
         crate::allocator::ALLOCATOR
             .0
             .lock()
-            .init(0x200000, 0x100000);
+            .init(HEAP_START, HEAP_SIZE);
     }
-    println!("init");
-    let b1 = Box::new(100);
-    println!("box 1 alloc");
-    drop(b1);
-    println!("drop and new box");
-    let b2 = Box::new(200);
-    println!("new box");
+    let mut v = Vec::with_capacity(0x300000); 
+    for i in 0..0x300000 {
+        v.push((i & 0xFF) as u8);
+    }
+    println!("Funcionou caralho");
     loop {}
 }

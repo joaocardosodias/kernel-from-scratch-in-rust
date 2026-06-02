@@ -1,4 +1,5 @@
 use crate::println;
+use crate::{HEAP_SIZE, HEAP_START};
 use core::fmt::Write;
 
 #[repr(C)]
@@ -50,33 +51,14 @@ pub extern "x86-interrupt" fn general_protection_fault(
 }
 
 pub extern "x86-interrupt" fn page_fault(_stack_frame: &mut InterruptStackFrame, _error_code: u64) {
-    let vga = 0xB8000 as *mut u8;
-    unsafe {
-        vga.add(0).write(b'P');
-        vga.add(1).write(0x0F);
-    }
-
     let fault_addr: u64;
     unsafe {
         core::arch::asm!("mov {}, cr2", out(reg) fault_addr);
     }
-    unsafe {
-        vga.add(2).write(b'F');
-        vga.add(3).write(0x0F);
-    }
 
-    if fault_addr >= 0x200000 && fault_addr < 0x300000 {
-        unsafe {
-            vga.add(4).write(b'H');
-            vga.add(5).write(0x0F);
-        }
-
+    let heap_end = (HEAP_START + HEAP_SIZE) as u64;
+    if fault_addr >= HEAP_START as u64 && fault_addr < heap_end {
         crate::memory::map_page(fault_addr);
-
-        unsafe {
-            vga.add(6).write(b'M');
-            vga.add(7).write(0x0F);
-        }
     } else {
         loop {}
     }
