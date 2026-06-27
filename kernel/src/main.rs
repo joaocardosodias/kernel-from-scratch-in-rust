@@ -15,6 +15,7 @@ pub mod idt;
 pub mod memory;
 pub mod pic;
 pub mod vga;
+pub mod gdt;
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
