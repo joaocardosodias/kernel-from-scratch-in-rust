@@ -42,7 +42,8 @@ impl LinkedListAllocator {
     }
 
     unsafe fn alloc(&mut self, layout: Layout) -> *mut u8 {
-        let size = layout.size()
+        let size = layout
+            .size()
             .max(layout.align())
             .max(core::mem::size_of::<ListNode>());
         let mut current = &mut self.head;
@@ -70,7 +71,8 @@ impl LinkedListAllocator {
     }
 
     unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
-        let size = layout.size()
+        let size = layout
+            .size()
             .max(layout.align())
             .max(core::mem::size_of::<ListNode>());
         self.add_free_region(ptr as usize, size);

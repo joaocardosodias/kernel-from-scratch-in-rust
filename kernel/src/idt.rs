@@ -92,7 +92,7 @@ impl IDT {
         let offset_low = handler as u16;
         let offset_mid = (handler >> 16) as u16;
         let offset_high = (handler >> 32) as u32;
-        let code_selector = 0x18;
+        let code_selector = 0x08;
         let ist_and_flags = (1 << 15) | (0xE << 8);
         self.entries[vector as usize] = Entry {
             offset_low,

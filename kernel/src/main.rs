@@ -6,16 +6,16 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::fmt::Write;
 use core::panic::PanicInfo;
-
+use gdt::GDT;
 pub const HEAP_START: usize = 0x200000;
 pub const HEAP_SIZE: usize = 0x400000;
 
 pub mod allocator;
+pub mod gdt;
 pub mod idt;
 pub mod memory;
 pub mod pic;
 pub mod vga;
-pub mod gdt;
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -23,7 +23,8 @@ fn panic(_info: &PanicInfo) -> ! {
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     vga::WRITER.lock().clear_screen();
-
+    static GDT: GDT = GDT::new();
+    GDT.load();
     let mut idt = idt::IDT {
         entries: [idt::Entry {
             offset_low: 0,
@@ -49,10 +50,13 @@ pub extern "C" fn _start() -> ! {
             .lock()
             .init(HEAP_START, HEAP_SIZE);
     }
-    let mut v = Vec::with_capacity(0x300000); 
+    let mut v = Vec::with_capacity(0x300000);
     for i in 0..0x300000 {
         v.push((i & 0xFF) as u8);
     }
     println!("Funcionou caralho");
+    unsafe {
+        core::arch::asm!("sti");
+    }
     loop {}
 }
