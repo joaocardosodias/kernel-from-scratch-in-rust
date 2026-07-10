@@ -30,8 +30,8 @@ pub extern "x86-interrupt" fn divide_by_zero_handler(_stack_frame: &mut Interrup
     println!("Divided by zero");
     loop {}
 }
-pub extern "x86-interrupt" fn invalid_opcode(_stack_frame: &mut InterruptStackFrame) {
-    println!("Invalid Opcode");
+pub extern "x86-interrupt" fn invalid_opcode(stack_frame: &mut InterruptStackFrame) {
+    println!("Invalid Opcode at {:#x}", stack_frame.instruction_pointer);
     loop {}
 }
 
@@ -40,12 +40,13 @@ pub extern "x86-interrupt" fn general_protection_fault(
     _error_code: u64,
 ) {
     let vga = 0xB8000 as *mut u8;
-    let msg = b"GPF!";
-    for (i, &b) in msg.iter().enumerate() {
-        unsafe {
-            vga.add(i * 2).write(b);
-            vga.add(i * 2 + 1).write(0x04);
-        }
+    unsafe {
+        vga.add(0).write(b'G');
+        vga.add(1).write(0x0C);
+        vga.add(2).write(b'P');
+        vga.add(3).write(0x0C);
+        vga.add(4).write(b'F');
+        vga.add(5).write(0x0C);
     }
     loop {}
 }
@@ -59,7 +60,8 @@ pub extern "x86-interrupt" fn page_fault(_stack_frame: &mut InterruptStackFrame,
     let heap_end = (HEAP_START + HEAP_SIZE) as u64;
     if fault_addr >= HEAP_START as u64 && fault_addr < heap_end {
         crate::memory::map_page(fault_addr);
-    } else {
+    } else{
+        println!("PAGE FAULT OUTSIDE HEAP!");
         loop {}
     }
 }

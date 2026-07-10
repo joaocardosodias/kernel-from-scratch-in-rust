@@ -39,7 +39,7 @@ pub fn map_page(virtual_addr: u64) {
                     new_pt.add(i).write(0);
                 }
 
-                pd.add(pd_index as usize).write((phys_frame as u64) | 3);
+                pd.add(pd_index as usize).write((phys_frame as u64) | 7);
             } else {
                 loop {}
             }
@@ -52,7 +52,7 @@ pub fn map_page(virtual_addr: u64) {
             map_frame(pt_phys_addr, 0x800000);
 
             let pt = 0x800000 as *mut u64;
-            pt.add(pt_index as usize).write((phys_frame as u64) | 3);
+            pt.add(pt_index as usize).write((phys_frame as u64) | 7);
             core::arch::asm!("invlpg [{}]", in(reg) aligned_addr, options(nostack));
         }
     }

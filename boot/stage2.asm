@@ -17,7 +17,7 @@ _start:
     mov ah, 0x02
     mov al, 32
     mov ch, 0
-    mov cl, 3
+    mov cl, 4
     mov dh, 0
     mov dl, [drive_num]
     mov bx, 0x2000
@@ -83,9 +83,9 @@ protected_mode:
     mov ecx, 0xC00
     rep stosd
 
-    mov dword [0x10000], 0x11003
-    mov dword [0x11000], 0x12003
-    mov dword [0x12000], 0x000083
+    mov dword [0x10000], 0x11007
+    mov dword [0x11000], 0x12007
+    mov dword [0x12000], 0x000087
 
     mov eax, 0x10000
     mov cr3, eax

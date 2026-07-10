@@ -40,7 +40,7 @@ kernel: $(KERNEL_BIN)
 
 $(DISK_IMG): $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN)
 	cat $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN) > $@
-	truncate -s %512 $@ 
+	truncate -s 20K $@
 
 run:
 	$(MAKE) clean
