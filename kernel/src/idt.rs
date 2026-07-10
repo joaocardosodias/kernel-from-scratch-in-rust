@@ -1,3 +1,4 @@
+#![allow(clippy::empty_loop)]
 use crate::println;
 use crate::{HEAP_SIZE, HEAP_START};
 use core::fmt::Write;

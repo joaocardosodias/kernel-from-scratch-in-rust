@@ -1,3 +1,4 @@
+#![allow(clippy::missing_safety_doc)]
 use core::alloc::{GlobalAlloc, Layout};
 use spin::Mutex;
 
@@ -10,6 +11,12 @@ pub struct LinkedListAllocator {
     head: ListNode,
 }
 
+impl Default for LinkedListAllocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 unsafe impl Send for LinkedListAllocator {}
 
 impl LinkedListAllocator {
@@ -17,7 +24,7 @@ impl LinkedListAllocator {
         Self {
             head: ListNode {
                 size: 0,
-                next: 0 as *mut ListNode,
+                next: core::ptr::null_mut(),
             },
         }
     }
@@ -30,7 +37,7 @@ impl LinkedListAllocator {
         assert!(size >= core::mem::size_of::<ListNode>());
         let node = ListNode {
             size,
-            next: 0 as *mut ListNode,
+            next: core::ptr::null_mut(),
         };
         core::ptr::write(addr as *mut ListNode, node);
         self.push_free_region(addr as *mut ListNode);
@@ -56,10 +63,10 @@ impl LinkedListAllocator {
 
                     let new_node = ListNode {
                         size: new_node_size,
-                        next: (*node).next,
+                        next: node.next,
                     };
                     core::ptr::write(new_node_addr as *mut ListNode, new_node);
-                    (*node).next = new_node_addr as *mut ListNode;
+                    node.next = new_node_addr as *mut ListNode;
                     node.size = size;
                 }
                 current.next = node.next;

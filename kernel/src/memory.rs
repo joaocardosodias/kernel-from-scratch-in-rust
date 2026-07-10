@@ -1,3 +1,5 @@
+#![allow(clippy::empty_loop)]
+#![allow(clippy::needless_range_loop)]
 const MEMORY_START: u64 = 0x200000;
 const FRAME_SIZE: u64 = 4096;
 const TOTAL_FRAMES: u64 = 8192;
@@ -6,7 +8,7 @@ static mut BITMAP: [u8; TOTAL_FRAMES as usize / 8] = [0; TOTAL_FRAMES as usize /
 
 pub fn allocate_memory() -> Option<usize> {
     unsafe {
-        for i in 0..BITMAP.len() {
+        for i in 0..(TOTAL_FRAMES as usize / 8) {
             if BITMAP[i] != 0xFF {
                 for bit in 0..8 {
                     if BITMAP[i] & (1 << bit) == 0 {

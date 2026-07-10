@@ -6,6 +6,12 @@ pub struct GDT {
     entries: [Entry; 7],
 }
 
+impl Default for GDT {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GDT {
     pub const fn new() -> Self {
         GDT {
@@ -84,6 +90,12 @@ pub struct TaskStateSegment {
     reserved_3: u64,
     reserved_4: u16,
     pub iomap_base: u16,
+}
+
+impl Default for TaskStateSegment {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TaskStateSegment {

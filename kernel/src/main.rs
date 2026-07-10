@@ -164,9 +164,9 @@ pub extern "C" fn _start() -> ! {
     }
 }
 
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn jump_to_user_mode(user_fn: extern "C" fn() -> !) -> ! {
-    let mut user_stack = Vec::with_capacity(4096);
-    user_stack.resize(4096, 0);
+    let user_stack = alloc::vec![0u8; 4096];
     let user_stack_end = user_stack.as_ptr() as u64 + 4096;
     core::mem::forget(user_stack);
 
@@ -185,11 +185,12 @@ pub unsafe fn jump_to_user_mode(user_fn: extern "C" fn() -> !) -> ! {
         in("rax") 0x1Bu64,
         in("rsi") user_stack_end,
         in("rdx") 0x23u64,
-        in("rdi") user_fn as u64,
+        in("rdi") user_fn as usize,
         options(noreturn)
     );
 }
 
+#[allow(clippy::empty_loop)]
 extern "C" fn user_program() -> ! {
     let msg = "Ola do User Mode via Syscall!\0";
     unsafe {
