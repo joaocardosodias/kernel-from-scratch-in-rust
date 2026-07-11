@@ -85,7 +85,7 @@ protected_mode:
 
     mov dword [0x10000], 0x11007
     mov dword [0x11000], 0x12007
-    mov dword [0x12000], 0x000087
+    mov dword [0x12000], 0x000083
 
     mov eax, 0x10000
     mov cr3, eax

@@ -160,12 +160,42 @@ pub extern "C" fn _start() -> ! {
     }
     println!("Dando o salto para o User Mode...");
     unsafe {
-        jump_to_user_mode(user_program);
+        let mut user_string = alloc::vec![0u8; 32];
+        let msg = b"Ola do User Mode via Syscall!\0";
+        user_string[..msg.len()].copy_from_slice(msg);
+        let string_ptr = user_string.as_ptr() as u64;
+        core::mem::forget(user_string);
+
+        let mut user_code = alloc::vec![0u8; 32];
+        let code_ptr = user_code.as_ptr() as u64;
+
+        user_code[0] = 0x48;
+        user_code[1] = 0xBF;
+        let ptr_bytes = string_ptr.to_ne_bytes();
+        user_code[2..10].copy_from_slice(&ptr_bytes);
+
+        user_code[10] = 0x48;
+        user_code[11] = 0xC7;
+        user_code[12] = 0xC0;
+        user_code[13] = 0x00;
+        user_code[14] = 0x00;
+        user_code[15] = 0x00;
+        user_code[16] = 0x00;
+
+        user_code[17] = 0x0F;
+        user_code[18] = 0x05;
+
+        user_code[19] = 0xEB;
+        user_code[20] = 0xFE;
+
+        core::mem::forget(user_code);
+
+        jump_to_user_mode(code_ptr);
     }
 }
 
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn jump_to_user_mode(user_fn: extern "C" fn() -> !) -> ! {
+pub unsafe fn jump_to_user_mode(user_entry: u64) -> ! {
     let user_stack = alloc::vec![0u8; 4096];
     let user_stack_end = user_stack.as_ptr() as u64 + 4096;
     core::mem::forget(user_stack);
@@ -185,22 +215,7 @@ pub unsafe fn jump_to_user_mode(user_fn: extern "C" fn() -> !) -> ! {
         in("rax") 0x1Bu64,
         in("rsi") user_stack_end,
         in("rdx") 0x23u64,
-        in("rdi") user_fn as usize,
+        in("rdi") user_entry as usize,
         options(noreturn)
     );
-}
-
-#[allow(clippy::empty_loop)]
-extern "C" fn user_program() -> ! {
-    let msg = "Ola do User Mode via Syscall!\0";
-    unsafe {
-        core::arch::asm!(
-            "syscall",
-            inout("rax") 0u64 => _,
-            in("rdi") msg.as_ptr() as u64,
-            out("rcx") _,
-            out("r11") _,
-        );
-    }
-    loop {}
 }
