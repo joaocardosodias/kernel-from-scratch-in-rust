@@ -1,18 +1,24 @@
 use core::fmt::{self, Write};
 use spin::Mutex;
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
+}
+
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
-        $crate::vga::WRITER.lock().write_fmt(core::format_args!($($arg)*)).unwrap();
+        $crate::drivers::vga::_print(core::format_args!($($arg)*));
     };
 }
+
 #[macro_export]
 macro_rules! println {
-    () => { print!("\n") };
+    () => { $crate::print!("\n") };
     ($($arg:tt)*) => {{
-        let mut writer = $crate::vga::WRITER.lock();
-        writer.write_fmt(core::format_args!($($arg)*)).unwrap();
-        writer.write_str("\n").unwrap();
+        $crate::drivers::vga::_print(core::format_args!($($arg)*));
+        $crate::print!("\n");
     }};
 }
 

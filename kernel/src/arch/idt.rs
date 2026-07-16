@@ -1,7 +1,6 @@
 #![allow(clippy::empty_loop)]
 use crate::println;
 use crate::{HEAP_SIZE, HEAP_START};
-use core::fmt::Write;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -60,7 +59,7 @@ pub extern "x86-interrupt" fn page_fault(_stack_frame: &mut InterruptStackFrame,
 
     let heap_end = (HEAP_START + HEAP_SIZE) as u64;
     if fault_addr >= HEAP_START as u64 && fault_addr < heap_end {
-        crate::memory::map_page(fault_addr);
+        crate::memory::paging::map_page(fault_addr);
     } else{
         println!("PAGE FAULT OUTSIDE HEAP!");
         loop {}

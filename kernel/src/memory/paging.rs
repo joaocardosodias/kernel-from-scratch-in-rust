@@ -59,6 +59,7 @@ pub fn map_page(virtual_addr: u64) {
         }
     }
 }
+
 pub fn map_frame(phys_addr: u64, virt_addr: u64) {
     let aligned_virt = virt_addr & !0xFFF;
     let pd = 0x12000 as *mut u64;
@@ -77,6 +78,6 @@ pub fn map_frame(phys_addr: u64, virt_addr: u64) {
     let pt_index = (aligned_virt >> 12) & 0x1FF;
     unsafe {
         pt.add(pt_index as usize).write((phys_addr & !0xFFF) | 3);
-        core::arch::asm!("invlpg [{}]",in(reg) aligned_virt,options(nostack))
+        core::arch::asm!("invlpg [{}]", in(reg) aligned_virt, options(nostack))
     }
 }

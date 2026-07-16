@@ -4,19 +4,16 @@
 
 extern crate alloc;
 use alloc::vec::Vec;
-use core::fmt::Write;
 use core::panic::PanicInfo;
 
 pub const HEAP_START: usize = 0x200000;
 pub const HEAP_SIZE: usize = 0x400000;
 
-pub mod allocator;
-pub mod gdt;
-pub mod idt;
+pub mod arch;
+pub mod drivers;
 pub mod memory;
-pub mod pic;
+pub mod syscalls;
 pub mod task;
-pub mod vga;
 
 extern "C" {
     fn timer_handler_asm();
@@ -28,96 +25,6 @@ pub static mut USER_RSP: u64 = 0;
 #[no_mangle]
 pub static mut KERNEL_RSP: u64 = 0;
 
-core::arch::global_asm!(
-    ".global syscall_entry",
-    "syscall_entry:",
-    "mov [rip + USER_RSP], rsp",
-    "mov rsp, [rip + KERNEL_RSP]",
-    "push qword ptr [rip + USER_RSP]",
-    "push r11",
-    "push rcx",
-    "push rax",
-    "push rdx",
-    "push rsi",
-    "push rdi",
-    "push r8",
-    "push r9",
-    "push r10",
-    "mov rsi, rdi",
-    "mov rdi, rax",
-    "call syscall_handler",
-    "pop r10",
-    "pop r9",
-    "pop r8",
-    "pop rdi",
-    "pop rsi",
-    "pop rdx",
-    "add rsp, 8",
-    "pop rcx",
-    "pop r11",
-    "pop rsp",
-    "sysretq"
-);
-
-#[no_mangle]
-pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
-    if syscall_num == 0 {
-        let ptr = arg1 as *const u8;
-        let mut writer = crate::vga::WRITER.lock();
-        let mut i = 0;
-        unsafe {
-            while *ptr.add(i) != 0 {
-                writer.write_byte(*ptr.add(i));
-                i += 1;
-            }
-        }
-        0
-    } else {
-        1
-    }
-}
-
-unsafe fn init_syscalls() {
-    let efer = rdmsr(0xC0000080);
-    wrmsr(0xC0000080, efer | 1);
-
-    let star = (0x13u64 << 48) | (0x08u64 << 32);
-    wrmsr(0xC0000081, star);
-
-    let syscall_entry_addr: u64;
-    core::arch::asm!(
-        "lea {}, [rip + syscall_entry]",
-        out(reg) syscall_entry_addr
-    );
-    wrmsr(0xC0000082, syscall_entry_addr);
-    wrmsr(0xC0000084, 0x200);
-}
-
-unsafe fn wrmsr(msr: u32, val: u64) {
-    let low = (val & 0xFFFFFFFF) as u32;
-    let high = (val >> 32) as u32;
-    core::arch::asm!(
-        "wrmsr",
-        in("ecx") msr,
-        in("eax") low,
-        in("edx") high,
-        options(nostack)
-    );
-}
-
-unsafe fn rdmsr(msr: u32) -> u64 {
-    let low: u32;
-    let high: u32;
-    core::arch::asm!(
-        "rdmsr",
-        in("ecx") msr,
-        out("eax") low,
-        out("edx") high,
-        options(nostack)
-    );
-    ((high as u64) << 32) | (low as u64)
-}
-
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -125,13 +32,14 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    vga::WRITER.lock().clear_screen();
-    gdt::init();
+    drivers::vga::WRITER.lock().clear_screen();
+    arch::gdt::init();
     unsafe {
-        init_syscalls();
+        syscalls::init();
     }
-    let mut idt = idt::IDT {
-        entries: [idt::Entry {
+
+    let mut idt = arch::idt::IDT {
+        entries: [arch::idt::Entry {
             offset_low: 0,
             code_selector: 0,
             ist_and_flags: 0,
@@ -140,45 +48,47 @@ pub extern "C" fn _start() -> ! {
             reserved: 0,
         }; 256],
     };
-    idt.set_entry(0, idt::divide_by_zero_handler as *const () as u64);
-    idt.set_entry(6, idt::invalid_opcode as *const () as u64);
-    idt.set_entry(13, idt::general_protection_fault as *const () as u64);
-    idt.set_entry(14, idt::page_fault as *const () as u64);
-    pic::remap(0x20, 0x28);
+    idt.set_entry(0, arch::idt::divide_by_zero_handler as *const () as u64);
+    idt.set_entry(6, arch::idt::invalid_opcode as *const () as u64);
+    idt.set_entry(13, arch::idt::general_protection_fault as *const () as u64);
+    idt.set_entry(14, arch::idt::page_fault as *const () as u64);
+    arch::pic::remap(0x20, 0x28);
     idt.set_entry(32, timer_handler_asm as *const () as u64);
-    idt.set_entry(33, idt::keyboard_handler as *const () as u64);
+    idt.set_entry(33, arch::idt::keyboard_handler as *const () as u64);
     idt.load();
-
     unsafe {
-        crate::allocator::ALLOCATOR
+        memory::allocator::ALLOCATOR
             .0
             .lock()
             .init(HEAP_START, HEAP_SIZE);
     }
+
     let mut v = Vec::with_capacity(0x300000);
     for i in 0..0x300000 {
         v.push((i & 0xFF) as u8);
     }
     println!("Funcionou caralho");
 
-    let mut scheduler = task::Scheduler::new();
+    let mut scheduler = task::scheduler::Scheduler::new();
     let task_a = create_user_task(1, b"A \0");
     let task_b = create_user_task(2, b"B \0");
     scheduler.add_task(task_a);
     scheduler.add_task(task_b);
-    *task::SCHEDULER.lock() = Some(scheduler);
+    *task::scheduler::SCHEDULER.lock() = Some(scheduler);
 
     println!("Dando o salto para o modo multitarefa...");
     task::start_multitasking();
 }
 
-fn create_user_task(id: usize, msg: &[u8]) -> task::Task {
+fn create_user_task(id: usize, msg: &[u8]) -> task::thread::Task {
     let mut user_string = alloc::vec![0u8; 32];
     user_string[..msg.len()].copy_from_slice(msg);
     let string_ptr = user_string.as_ptr() as u64;
     core::mem::forget(user_string);
+
     let mut user_code = alloc::vec![0u8; 32];
     let code_ptr = user_code.as_ptr() as u64;
+
     user_code[0] = 0x48;
     user_code[1] = 0xBF;
     let ptr_bytes = string_ptr.to_ne_bytes();
@@ -203,6 +113,8 @@ fn create_user_task(id: usize, msg: &[u8]) -> task::Task {
     user_code[27] = 0xFC;
     user_code[28] = 0xEB;
     user_code[29] = 0xE2;
+
     core::mem::forget(user_code);
-    task::Task::new(id, code_ptr)
+
+    task::thread::Task::new(id, code_ptr)
 }
