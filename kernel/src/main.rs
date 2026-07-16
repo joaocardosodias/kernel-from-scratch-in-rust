@@ -161,7 +161,6 @@ pub extern "C" fn _start() -> ! {
     }
     println!("Funcionou caralho");
 
-    // Inicializa o Scheduler e adiciona as duas tarefas
     let mut scheduler = task::Scheduler::new();
     let task_a = create_user_task(1, b"A \0");
     let task_b = create_user_task(2, b"B \0");
@@ -178,17 +177,12 @@ fn create_user_task(id: usize, msg: &[u8]) -> task::Task {
     user_string[..msg.len()].copy_from_slice(msg);
     let string_ptr = user_string.as_ptr() as u64;
     core::mem::forget(user_string);
-
     let mut user_code = alloc::vec![0u8; 32];
     let code_ptr = user_code.as_ptr() as u64;
-
-    // movabs rdi, string_ptr (48 bf <8 bytes>)
     user_code[0] = 0x48;
     user_code[1] = 0xBF;
     let ptr_bytes = string_ptr.to_ne_bytes();
     user_code[2..10].copy_from_slice(&ptr_bytes);
-
-    // mov rax, 0 (48 c7 c0 00 00 00 00)
     user_code[10] = 0x48;
     user_code[11] = 0xC7;
     user_code[12] = 0xC0;
@@ -196,31 +190,19 @@ fn create_user_task(id: usize, msg: &[u8]) -> task::Task {
     user_code[14] = 0x00;
     user_code[15] = 0x00;
     user_code[16] = 0x00;
-
-    // syscall (0f 05)
     user_code[17] = 0x0F;
     user_code[18] = 0x05;
-
-    // mov ecx, 0x0FFFFFFF (b9 ff ff ff 0f)
     user_code[19] = 0xB9;
     user_code[20] = 0xFF;
     user_code[21] = 0xFF;
     user_code[22] = 0xFF;
     user_code[23] = 0x0F;
-
-    // dec ecx (ff c9)
     user_code[24] = 0xFF;
     user_code[25] = 0xC9;
-
-    // jnz delay_loop (75 fc)
     user_code[26] = 0x75;
     user_code[27] = 0xFC;
-
-    // jmp start (eb e2)
     user_code[28] = 0xEB;
     user_code[29] = 0xE2;
-
     core::mem::forget(user_code);
-
     task::Task::new(id, code_ptr)
 }

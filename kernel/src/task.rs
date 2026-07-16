@@ -1,6 +1,6 @@
+use crate::gdt::TSS;
 use alloc::vec::Vec;
 use spin::Mutex;
-use crate::gdt::TSS;
 
 pub struct Task {
     pub id: usize,
@@ -21,19 +21,17 @@ impl Task {
         let mut rsp = kernel_stack_top;
 
         unsafe {
-            // Empilha o Interrupt Frame inicial para o iretq
             rsp -= 8;
-            *(rsp as *mut u64) = 0x1B; // SS (User Data)
+            *(rsp as *mut u64) = 0x1B; 
             rsp -= 8;
-            *(rsp as *mut u64) = user_stack_top; // RSP (User Stack)
+            *(rsp as *mut u64) = user_stack_top; 
             rsp -= 8;
-            *(rsp as *mut u64) = 0x200; // RFLAGS (Interrupções ativas)
+            *(rsp as *mut u64) = 0x200;
             rsp -= 8;
-            *(rsp as *mut u64) = 0x23; // CS (User Code)
+            *(rsp as *mut u64) = 0x23;
             rsp -= 8;
-            *(rsp as *mut u64) = entry_point; // RIP (Ponto de entrada)
+            *(rsp as *mut u64) = entry_point; 
 
-            // Empilha os 15 registradores gerais iniciados em zero
             for _ in 0..15 {
                 rsp -= 8;
                 *(rsp as *mut u64) = 0;
@@ -54,6 +52,12 @@ pub struct Scheduler {
     pub current_index: usize,
 }
 
+impl Default for Scheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Scheduler {
     pub fn new() -> Self {
         Scheduler {
@@ -61,7 +65,6 @@ impl Scheduler {
             current_index: 0,
         }
     }
-
     pub fn add_task(&mut self, task: Task) {
         self.tasks.push(task);
     }
@@ -70,23 +73,15 @@ impl Scheduler {
         if self.tasks.is_empty() {
             return current_rsp;
         }
-
-        // Salva o RSP da stack de Kernel do processo atual
         self.tasks[self.current_index].kernel_rsp = current_rsp;
-
-        // Escolhe o próximo processo (Round-Robin)
         self.current_index = (self.current_index + 1) % self.tasks.len();
-
         let next_task = &self.tasks[self.current_index];
-
-        // Atualiza a TSS com a stack de Kernel da nova tarefa para as próximas interrupções
         unsafe {
             let stack_size = 4096;
             let top = next_task.kernel_stack.as_ptr() as u64 + stack_size as u64;
             TSS.rsp[0] = top;
             crate::KERNEL_RSP = top;
         }
-
         next_task.kernel_rsp
     }
 }
@@ -144,7 +139,6 @@ pub extern "C" fn timer_interrupt_handler(current_rsp: u64) -> u64 {
 core::arch::global_asm!(
     ".global timer_handler_asm",
     "timer_handler_asm:",
-    // 1. Salva o contexto dos registradores gerais na pilha de kernel da tarefa atual
     "push rax",
     "push rbx",
     "push rcx",
@@ -160,19 +154,11 @@ core::arch::global_asm!(
     "push r13",
     "push r14",
     "push r15",
-
-    // 2. Avisa o controlador PIC que a interrupção física foi tratada (EOI)
     "mov al, 0x20",
     "out 0x20, al",
-
-    // 3. Passa o RSP atual como argumento (RDI) e chama o escalonador Rust
     "mov rdi, rsp",
     "call timer_interrupt_handler",
-
-    // 4. Carrega o novo RSP (retornado em RAX) para chavear a pilha
     "mov rsp, rax",
-
-    // 5. Restaura os registradores gerais do contexto da nova tarefa
     "pop r15",
     "pop r14",
     "pop r13",
@@ -188,7 +174,5 @@ core::arch::global_asm!(
     "pop rcx",
     "pop rbx",
     "pop rax",
-
-    // 6. Retorna de interrupção (recarrega CS, RIP, RFLAGS, SS, RSP da nova tarefa)
     "iretq"
 );
