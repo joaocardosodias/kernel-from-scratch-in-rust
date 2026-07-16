@@ -8,7 +8,7 @@ pub fn remap(pic1_offset: u8, pic2_offset: u8) {
         core::arch::asm!("out 0xA1, al", in("al") 0x02u8 as i8);
         core::arch::asm!("out 0x21, al", in("al") 0x01u8 as i8);
         core::arch::asm!("out 0xA1, al", in("al") 0x01u8 as i8);
-        core::arch::asm!("out 0x21, al", in("al") 0xFDu8 as i8);
+        core::arch::asm!("out 0x21, al", in("al") 0xFCu8 as i8);
         core::arch::asm!("out 0xA1, al", in("al") 0xFFu8 as i8);
     }
 }

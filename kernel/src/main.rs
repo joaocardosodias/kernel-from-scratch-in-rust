@@ -15,7 +15,12 @@ pub mod gdt;
 pub mod idt;
 pub mod memory;
 pub mod pic;
+pub mod task;
 pub mod vga;
+
+extern "C" {
+    fn timer_handler_asm();
+}
 
 #[no_mangle]
 pub static mut USER_RSP: u64 = 0;
@@ -140,7 +145,7 @@ pub extern "C" fn _start() -> ! {
     idt.set_entry(13, idt::general_protection_fault as *const () as u64);
     idt.set_entry(14, idt::page_fault as *const () as u64);
     pic::remap(0x20, 0x28);
-    idt.set_entry(32, idt::time_handler as *const () as u64);
+    idt.set_entry(32, timer_handler_asm as *const () as u64);
     idt.set_entry(33, idt::keyboard_handler as *const () as u64);
     idt.load();
 
@@ -155,67 +160,67 @@ pub extern "C" fn _start() -> ! {
         v.push((i & 0xFF) as u8);
     }
     println!("Funcionou caralho");
-    unsafe {
-        core::arch::asm!("sti");
-    }
-    println!("Dando o salto para o User Mode...");
-    unsafe {
-        let mut user_string = alloc::vec![0u8; 32];
-        let msg = b"Ola do User Mode via Syscall!\0";
-        user_string[..msg.len()].copy_from_slice(msg);
-        let string_ptr = user_string.as_ptr() as u64;
-        core::mem::forget(user_string);
 
-        let mut user_code = alloc::vec![0u8; 32];
-        let code_ptr = user_code.as_ptr() as u64;
+    // Inicializa o Scheduler e adiciona as duas tarefas
+    let mut scheduler = task::Scheduler::new();
+    let task_a = create_user_task(1, b"A \0");
+    let task_b = create_user_task(2, b"B \0");
+    scheduler.add_task(task_a);
+    scheduler.add_task(task_b);
+    *task::SCHEDULER.lock() = Some(scheduler);
 
-        user_code[0] = 0x48;
-        user_code[1] = 0xBF;
-        let ptr_bytes = string_ptr.to_ne_bytes();
-        user_code[2..10].copy_from_slice(&ptr_bytes);
-
-        user_code[10] = 0x48;
-        user_code[11] = 0xC7;
-        user_code[12] = 0xC0;
-        user_code[13] = 0x00;
-        user_code[14] = 0x00;
-        user_code[15] = 0x00;
-        user_code[16] = 0x00;
-
-        user_code[17] = 0x0F;
-        user_code[18] = 0x05;
-
-        user_code[19] = 0xEB;
-        user_code[20] = 0xFE;
-
-        core::mem::forget(user_code);
-
-        jump_to_user_mode(code_ptr);
-    }
+    println!("Dando o salto para o modo multitarefa...");
+    task::start_multitasking();
 }
 
-#[allow(clippy::missing_safety_doc)]
-pub unsafe fn jump_to_user_mode(user_entry: u64) -> ! {
-    let user_stack = alloc::vec![0u8; 4096];
-    let user_stack_end = user_stack.as_ptr() as u64 + 4096;
-    core::mem::forget(user_stack);
+fn create_user_task(id: usize, msg: &[u8]) -> task::Task {
+    let mut user_string = alloc::vec![0u8; 32];
+    user_string[..msg.len()].copy_from_slice(msg);
+    let string_ptr = user_string.as_ptr() as u64;
+    core::mem::forget(user_string);
 
-    core::arch::asm!(
-        "cli",
-        "mov ds, ax",
-        "mov es, ax",
-        "mov fs, ax",
-        "mov gs, ax",
-        "push rax",
-        "push rsi",
-        "push 0x200",
-        "push rdx",
-        "push rdi",
-        "iretq",
-        in("rax") 0x1Bu64,
-        in("rsi") user_stack_end,
-        in("rdx") 0x23u64,
-        in("rdi") user_entry as usize,
-        options(noreturn)
-    );
+    let mut user_code = alloc::vec![0u8; 32];
+    let code_ptr = user_code.as_ptr() as u64;
+
+    // movabs rdi, string_ptr (48 bf <8 bytes>)
+    user_code[0] = 0x48;
+    user_code[1] = 0xBF;
+    let ptr_bytes = string_ptr.to_ne_bytes();
+    user_code[2..10].copy_from_slice(&ptr_bytes);
+
+    // mov rax, 0 (48 c7 c0 00 00 00 00)
+    user_code[10] = 0x48;
+    user_code[11] = 0xC7;
+    user_code[12] = 0xC0;
+    user_code[13] = 0x00;
+    user_code[14] = 0x00;
+    user_code[15] = 0x00;
+    user_code[16] = 0x00;
+
+    // syscall (0f 05)
+    user_code[17] = 0x0F;
+    user_code[18] = 0x05;
+
+    // mov ecx, 0x0FFFFFFF (b9 ff ff ff 0f)
+    user_code[19] = 0xB9;
+    user_code[20] = 0xFF;
+    user_code[21] = 0xFF;
+    user_code[22] = 0xFF;
+    user_code[23] = 0x0F;
+
+    // dec ecx (ff c9)
+    user_code[24] = 0xFF;
+    user_code[25] = 0xC9;
+
+    // jnz delay_loop (75 fc)
+    user_code[26] = 0x75;
+    user_code[27] = 0xFC;
+
+    // jmp start (eb e2)
+    user_code[28] = 0xEB;
+    user_code[29] = 0xE2;
+
+    core::mem::forget(user_code);
+
+    task::Task::new(id, code_ptr)
 }
