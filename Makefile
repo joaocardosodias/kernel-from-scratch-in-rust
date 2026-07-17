@@ -13,6 +13,8 @@ DISK_IMG    := $(BUILD_DIR)/disk.img
 QEMU        := qemu-system-x86_64
 QEMU_FLAGS  := -drive format=raw,file=$(DISK_IMG) -m 64
 
+KERNEL_SRC  := $(shell find $(KERNEL_DIR)/src -type f) $(KERNEL_DIR)/Cargo.toml
+
 .PHONY: all clean run boot kernel
 
 all: $(DISK_IMG)
@@ -32,7 +34,7 @@ $(STAGE2_PADDED): $(STAGE2_BIN)
 
 boot: $(STAGE1_BIN) $(STAGE2_BIN)
 
-$(KERNEL_BIN): | $(BUILD_DIR)
+$(KERNEL_BIN): $(KERNEL_SRC) | $(BUILD_DIR)
 	cd $(KERNEL_DIR) && cargo build --release
 	objcopy -O binary $(KERNEL_DIR)/target/x86_64-unknown-none/release/kernel $@
 
@@ -42,9 +44,7 @@ $(DISK_IMG): $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN)
 	cat $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN) > $@
 	truncate -s 20K $@
 
-run:
-	$(MAKE) clean
-	$(MAKE) all
+run: $(DISK_IMG)
 	$(QEMU) $(QEMU_FLAGS)
 
 clean:
