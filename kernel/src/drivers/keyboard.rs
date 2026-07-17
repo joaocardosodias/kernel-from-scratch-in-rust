@@ -9,9 +9,7 @@ pub struct RingBuffer {
 }
 
 impl Default for RingBuffer {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl RingBuffer {
@@ -58,8 +56,8 @@ pub fn scancode_to_ascii(scancode: u8) -> Option<u8> {
         0x0B => Some(b'0'),
         0x0C => Some(b'-'),
         0x0D => Some(b'='),
-        0x0E => Some(8),     
-        0x0F => Some(b'\t'), 
+        0x0E => Some(8),
+        0x0F => Some(b'\t'),
         0x10 => Some(b'q'),
         0x11 => Some(b'w'),
         0x12 => Some(b'e'),
@@ -87,7 +85,7 @@ pub fn scancode_to_ascii(scancode: u8) -> Option<u8> {
         0x30 => Some(b'b'),
         0x31 => Some(b'n'),
         0x32 => Some(b'm'),
-        0x39 => Some(b' '),   
-        _ => None,            
+        0x39 => Some(b' '),
+        _ => None,
     }
 }

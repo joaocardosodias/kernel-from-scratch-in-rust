@@ -1,10 +1,9 @@
 use core::fmt::{self, Write};
+
 use spin::Mutex;
 
 #[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-    WRITER.lock().write_fmt(args).unwrap();
-}
+pub fn _print(args: fmt::Arguments) { WRITER.lock().write_fmt(args).unwrap(); }
 
 #[macro_export]
 macro_rules! print {
@@ -32,28 +31,28 @@ const BUFFER_ADDR: usize = 0xB8000;
 
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
     column: 0,
-    row: 0,
-    color: ColorCode::new(Color::White, Color::Black),
+    row:    0,
+    color:  ColorCode::new(Color::White, Color::Black),
 });
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
-    Black = 0x00,
-    Blue = 0x01,
-    Green = 0x02,
-    Cyan = 0x03,
-    Red = 0x04,
-    Magenta = 0x05,
-    Brown = 0x06,
-    LightGrey = 0x07,
-    DarkGrey = 0x08,
-    LightBlue = 0x09,
-    LightGreen = 0x0A,
-    LightCyan = 0x0B,
-    LightRed = 0x0C,
+    Black        = 0x00,
+    Blue         = 0x01,
+    Green        = 0x02,
+    Cyan         = 0x03,
+    Red          = 0x04,
+    Magenta      = 0x05,
+    Brown        = 0x06,
+    LightGrey    = 0x07,
+    DarkGrey     = 0x08,
+    LightBlue    = 0x09,
+    LightGreen   = 0x0A,
+    LightCyan    = 0x0B,
+    LightRed     = 0x0C,
     LightMagenta = 0x0D,
-    Yellow = 0x0E,
-    White = 0x0F,
+    Yellow       = 0x0E,
+    White        = 0x0F,
 }
 
 #[repr(C)]
@@ -74,14 +73,25 @@ pub struct ScreenChar {
 
 pub struct Writer {
     column: usize,
-    row: usize,
-    color: ColorCode,
+    row:    usize,
+    color:  ColorCode,
 }
 
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
         let buffer = BUFFER_ADDR as *mut ScreenChar;
         let offset = self.row * BUFFER_WIDTH + self.column;
+
+        if byte == 8 {
+            if self.column > 0 {
+                self.column -= 1;
+                let offset_bs = self.row * BUFFER_WIDTH + self.column;
+                unsafe {
+                    buffer.add(offset_bs).write(BLANK);
+                }
+            }
+            return;
+        }
 
         if byte == b'\n' {
             self.column = 0;

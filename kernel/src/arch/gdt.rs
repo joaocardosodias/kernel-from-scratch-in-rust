@@ -7,9 +7,7 @@ pub struct GDT {
 }
 
 impl Default for GDT {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl GDT {
@@ -56,7 +54,7 @@ impl GDT {
         use core::arch::asm;
         let ptr = GDTPtr {
             limit: (core::mem::size_of::<[Entry; 7]>() - 1) as u16,
-            base: self.entries.as_ptr() as u64,
+            base:  self.entries.as_ptr() as u64,
         };
         unsafe {
             asm!("lgdt [{}]", in(reg) &ptr, options(nostack));
@@ -77,34 +75,32 @@ impl GDT {
 #[repr(C, packed)]
 pub struct GDTPtr {
     limit: u16,
-    base: u64,
+    base:  u64,
 }
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C, packed)]
 pub struct TaskStateSegment {
-    reserved_1: u32,
-    pub rsp: [u64; 3],
-    reserved_2: u64,
-    pub ist: [u64; 7],
-    reserved_3: u64,
-    reserved_4: u16,
+    reserved_1:     u32,
+    pub rsp:        [u64; 3],
+    reserved_2:     u64,
+    pub ist:        [u64; 7],
+    reserved_3:     u64,
+    reserved_4:     u16,
     pub iomap_base: u16,
 }
 
 impl Default for TaskStateSegment {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl TaskStateSegment {
     pub const fn new() -> Self {
         TaskStateSegment {
             reserved_1: 0,
-            rsp: [0; 3],
+            rsp:        [0; 3],
             reserved_2: 0,
-            ist: [0; 7],
+            ist:        [0; 7],
             reserved_3: 0,
             reserved_4: 0,
             iomap_base: 104,

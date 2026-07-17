@@ -10,6 +10,9 @@ pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
         } else {
             0
         }
+    } else if syscall_num == 2 {
+        crate::drivers::vga::WRITER.lock().clear_screen();
+        0
     } else {
         1
     }

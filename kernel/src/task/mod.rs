@@ -1,8 +1,7 @@
 pub mod scheduler;
 pub mod thread;
 
-use crate::arch::gdt::TSS;
-use crate::task::scheduler::SCHEDULER;
+use crate::{arch::gdt::TSS, task::scheduler::SCHEDULER};
 
 pub fn start_multitasking() -> ! {
     let first_rsp: u64;

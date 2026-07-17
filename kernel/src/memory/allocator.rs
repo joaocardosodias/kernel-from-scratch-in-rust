@@ -1,5 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 use core::alloc::{GlobalAlloc, Layout};
+
 use spin::Mutex;
 
 struct ListNode {
@@ -12,9 +13,7 @@ pub struct LinkedListAllocator {
 }
 
 impl Default for LinkedListAllocator {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 unsafe impl Send for LinkedListAllocator {}

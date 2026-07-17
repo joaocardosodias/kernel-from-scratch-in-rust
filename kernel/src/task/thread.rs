@@ -1,10 +1,10 @@
 use alloc::vec::Vec;
 
 pub struct Task {
-    pub id: usize,
-    pub kernel_rsp: u64,
+    pub id:           usize,
+    pub kernel_rsp:   u64,
     pub kernel_stack: Vec<u8>,
-    pub user_stack: Vec<u8>,
+    pub user_stack:   Vec<u8>,
 }
 
 impl Task {
@@ -20,15 +20,15 @@ impl Task {
 
         unsafe {
             rsp -= 8;
-            *(rsp as *mut u64) = 0x1B; 
+            *(rsp as *mut u64) = 0x1B;
             rsp -= 8;
-            *(rsp as *mut u64) = user_stack_top; 
+            *(rsp as *mut u64) = user_stack_top;
             rsp -= 8;
             *(rsp as *mut u64) = 0x200;
             rsp -= 8;
             *(rsp as *mut u64) = 0x23;
             rsp -= 8;
-            *(rsp as *mut u64) = entry_point; 
+            *(rsp as *mut u64) = entry_point;
 
             for _ in 0..15 {
                 rsp -= 8;

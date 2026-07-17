@@ -1,16 +1,15 @@
 #![allow(clippy::empty_loop)]
-use crate::println;
-use crate::{HEAP_SIZE, HEAP_START};
+use crate::{println, HEAP_SIZE, HEAP_START};
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Entry {
-    pub offset_low: u16,
+    pub offset_low:    u16,
     pub code_selector: u16,
     pub ist_and_flags: u16,
-    pub offset_mid: u16,
-    pub offset_high: u32,
-    pub reserved: u32,
+    pub offset_mid:    u16,
+    pub offset_high:   u32,
+    pub reserved:      u32,
 }
 #[repr(C)]
 pub struct IDT {
@@ -19,10 +18,10 @@ pub struct IDT {
 #[repr(C)]
 pub struct InterruptStackFrame {
     pub instruction_pointer: u64,
-    pub code_segment: u64,
-    pub cpu_flags: u64,
-    pub stack_pointer: u64,
-    pub stack_segment: u64,
+    pub code_segment:        u64,
+    pub cpu_flags:           u64,
+    pub stack_pointer:       u64,
+    pub stack_segment:       u64,
 }
 
 #[no_mangle]
@@ -60,7 +59,7 @@ pub extern "x86-interrupt" fn page_fault(_stack_frame: &mut InterruptStackFrame,
     let heap_end = (HEAP_START + HEAP_SIZE) as u64;
     if fault_addr >= HEAP_START as u64 && fault_addr < heap_end {
         crate::memory::paging::map_page(fault_addr);
-    } else{
+    } else {
         println!("PAGE FAULT OUTSIDE HEAP!");
         loop {}
     }
@@ -104,14 +103,14 @@ impl IDT {
 #[repr(C, packed)]
 pub struct Pointer {
     limit: u16,
-    base: u64,
+    base:  u64,
 }
 impl IDT {
     pub fn load(&self) {
         unsafe {
             let ptr = Pointer {
                 limit: (256 * 16 - 1) as u16,
-                base: self as *const _ as u64,
+                base:  self as *const _ as u64,
             };
             core::arch::asm!("lidt [{}]", in(reg) &ptr, options(nostack));
         }
