@@ -70,8 +70,8 @@ pub extern "C" fn _start() -> ! {
     println!("Funcionou caralho");
 
     let mut scheduler = task::scheduler::Scheduler::new();
-    let task_a = create_user_task(1, b"A \0");
-    let task_b = create_user_task(2, b"B \0");
+    let task_a = create_user_task_shell(1);
+    let task_b = create_user_task_silent(2);
     scheduler.add_task(task_a);
     scheduler.add_task(task_b);
     *task::scheduler::SCHEDULER.lock() = Some(scheduler);
@@ -80,39 +80,73 @@ pub extern "C" fn _start() -> ! {
     task::start_multitasking();
 }
 
-fn create_user_task(id: usize, msg: &[u8]) -> task::thread::Task {
-    let mut user_string = alloc::vec![0u8; 32];
-    user_string[..msg.len()].copy_from_slice(msg);
-    let string_ptr = user_string.as_ptr() as u64;
-    core::mem::forget(user_string);
-
-    let mut user_code = alloc::vec![0u8; 32];
+fn create_user_task_shell(id: usize) -> task::thread::Task {
+    let mut user_code = alloc::vec![0u8; 64];
     let code_ptr = user_code.as_ptr() as u64;
 
+
     user_code[0] = 0x48;
-    user_code[1] = 0xBF;
-    let ptr_bytes = string_ptr.to_ne_bytes();
-    user_code[2..10].copy_from_slice(&ptr_bytes);
-    user_code[10] = 0x48;
-    user_code[11] = 0xC7;
-    user_code[12] = 0xC0;
-    user_code[13] = 0x00;
-    user_code[14] = 0x00;
-    user_code[15] = 0x00;
+    user_code[1] = 0xC7;
+    user_code[2] = 0xC0;
+    user_code[3] = 0x01;
+    user_code[4] = 0x00;
+    user_code[5] = 0x00;
+    user_code[6] = 0x00;
+
+
+    user_code[7] = 0x0F;
+    user_code[8] = 0x05;
+
+
+    user_code[9] = 0x48;
+    user_code[10] = 0x83;
+    user_code[11] = 0xF8;
+    user_code[12] = 0x00;
+
+
+    user_code[13] = 0x74;
+    user_code[14] = 0xF1;
+
+    user_code[15] = 0x6A;
     user_code[16] = 0x00;
-    user_code[17] = 0x0F;
-    user_code[18] = 0x05;
-    user_code[19] = 0xB9;
-    user_code[20] = 0xFF;
-    user_code[21] = 0xFF;
-    user_code[22] = 0xFF;
-    user_code[23] = 0x0F;
-    user_code[24] = 0xFF;
-    user_code[25] = 0xC9;
-    user_code[26] = 0x75;
-    user_code[27] = 0xFC;
-    user_code[28] = 0xEB;
-    user_code[29] = 0xE2;
+
+    user_code[17] = 0x50;
+
+    user_code[18] = 0x48;
+    user_code[19] = 0x89;
+    user_code[20] = 0xE7;
+
+    user_code[21] = 0x48;
+    user_code[22] = 0xC7;
+    user_code[23] = 0xC0;
+    user_code[24] = 0x00;
+    user_code[25] = 0x00;
+    user_code[26] = 0x00;
+    user_code[27] = 0x00;
+
+    user_code[28] = 0x0F;
+    user_code[29] = 0x05;
+
+    user_code[30] = 0x48;
+    user_code[31] = 0x83;
+    user_code[32] = 0xC4;
+    user_code[33] = 0x10;
+
+    user_code[34] = 0xEB;
+    user_code[35] = 0xDC;
+
+    core::mem::forget(user_code);
+
+    task::thread::Task::new(id, code_ptr)
+}
+
+fn create_user_task_silent(id: usize) -> task::thread::Task {
+    let mut user_code = alloc::vec![0u8; 16];
+    let code_ptr = user_code.as_ptr() as u64;
+
+    // offset 0: jmp start (eb fe)
+    user_code[0] = 0xEB;
+    user_code[1] = 0xFE;
 
     core::mem::forget(user_code);
 

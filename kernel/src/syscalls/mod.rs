@@ -4,6 +4,12 @@ pub mod console;
 pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
     if syscall_num == 0 {
         console::sys_write(arg1)
+    } else if syscall_num == 1 {
+        if let Some(ascii) = crate::drivers::keyboard::KEYBOARD_BUFFER.lock().pop() {
+            ascii as u64
+        } else {
+            0
+        }
     } else {
         1
     }
