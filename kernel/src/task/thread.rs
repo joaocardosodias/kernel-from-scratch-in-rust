@@ -1,10 +1,17 @@
 use alloc::vec::Vec;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskState {
+    Ready,
+    Blocked,
+}
+
 pub struct Task {
     pub id:           usize,
     pub kernel_rsp:   u64,
     pub kernel_stack: Vec<u8>,
     pub user_stack:   Vec<u8>,
+    pub state:        TaskState,
 }
 
 impl Task {
@@ -41,6 +48,7 @@ impl Task {
             kernel_rsp: rsp,
             kernel_stack,
             user_stack,
+            state: TaskState::Ready,
         }
     }
 }

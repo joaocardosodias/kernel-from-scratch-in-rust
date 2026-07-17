@@ -77,6 +77,9 @@ pub extern "x86-interrupt" fn keyboard_handler(_stack_frame: &mut InterruptStack
 
         if let Some(ascii) = crate::drivers::keyboard::scancode_to_ascii(scancode) {
             crate::drivers::keyboard::KEYBOARD_BUFFER.lock().push(ascii);
+            if let Some(ref mut sched) = *crate::task::scheduler::SCHEDULER.lock() {
+                sched.unblock_task(1);
+            }
         }
 
         core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);

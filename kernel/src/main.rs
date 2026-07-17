@@ -17,6 +17,7 @@ pub mod task;
 
 extern "C" {
     fn timer_handler_asm();
+    fn yield_handler_asm();
 }
 
 #[no_mangle]
@@ -53,6 +54,7 @@ pub extern "C" fn _start() -> ! {
     arch::pic::remap(0x20, 0x28);
     idt.set_entry(32, timer_handler_asm as *const () as u64);
     idt.set_entry(33, arch::idt::keyboard_handler as *const () as u64);
+    idt.set_entry(48, yield_handler_asm as *const () as u64);
     idt.load();
     unsafe {
         memory::allocator::ALLOCATOR
