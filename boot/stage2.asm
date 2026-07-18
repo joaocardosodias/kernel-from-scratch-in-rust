@@ -10,12 +10,10 @@ _start:
     mov ss, ax
     mov sp, 0x7E00
     sti
-
     mov ax, 0x2401
     int 0x15
-
     mov ah, 0x02
-    mov al, 32
+    mov al, 60
     mov ch, 0
     mov cl, 4
     mov dh, 0
@@ -24,13 +22,77 @@ _start:
     mov es, bx
     xor bx, bx
     int 0x13
+    xor ax, ax
+    mov es, ax
+    mov di, 0x4000
+    mov ax, 0x4F00
+    int 0x10
+    cmp ax, 0x004F
+    jne vbe_fail
+    mov si, [0x400E]
+    mov ax, [0x4010]
+    mov fs, ax
 
+search_mode:
+    mov cx, [fs:si]
+    cmp cx, 0xFFFF
+    je vbe_fail
+    push si
+    push cx
+    xor ax, ax
+    mov es, ax
+    mov di, 0x5000
+    mov ax, 0x4F01
+    int 0x10
+    pop cx
+    pop si
+    cmp ax, 0x004F
+    jne next_mode
+    mov ax, [0x5012]
+    cmp ax, 1920
+    jne next_mode
+    mov ax, [0x5014]
+    cmp ax, 1080
+    jne next_mode
+    mov al, [0x5019]
+    cmp al, 32
+    jne next_mode
+    mov ax, [0x5000]
+    test ax, 0x80
+    jz next_mode
+    jmp found_mode
+
+next_mode:
+    add si, 2
+    jmp search_mode
+
+found_mode:
+    mov eax, [0x5028]
+    mov [0x7000], eax
+    mov dword [0x7004], 0
+    movzx eax, word [0x5012]
+    mov [0x7008], eax
+    movzx eax, word [0x5014]
+    mov [0x700C], eax
+    movzx eax, word [0x5010]
+    mov [0x7010], eax
+    or cx, 0x4000
+    mov ax, 0x4F02
+    mov bx, cx
+    int 0x10
+    cmp ax, 0x004F
+    jne vbe_fail
     lgdt [gdt_ptr]
     cli
     mov eax, cr0
     or  eax, 1
     mov cr0, eax
     jmp 0x08:protected_mode
+
+vbe_fail:
+    cli
+    hlt
+    jmp vbe_fail
 
 drive_num: db 0
 
@@ -77,32 +139,36 @@ protected_mode:
     mov gs, ax
     mov ss, ax
     mov esp, 0x90000
-
     mov edi, 0x10000
     xor eax, eax
     mov ecx, 0xC00
     rep stosd
-
     mov dword [0x10000], 0x11007
     mov dword [0x11000], 0x12007
     mov dword [0x12000], 0x000083
+    mov ecx, 4
+    mov edi, 0x12028
+    mov eax, [0x7000]
+    or  eax, 0x87
 
+.map_lfb_loop:
+    mov [edi], eax
+    mov dword [edi + 4], 0
+    add eax, 0x200000
+    add edi, 8
+    loop .map_lfb_loop
     mov eax, 0x10000
     mov cr3, eax
-
     mov eax, cr4
     or  eax, 0x20
     mov cr4, eax
-
     mov ecx, 0xC0000080
     rdmsr
     or  eax, 0x100
     wrmsr
-
     mov eax, cr0
     or  eax, 0x80000000
     mov cr0, eax
-
     jmp 0x18:long_mode
 
 [bits 64]
@@ -115,8 +181,7 @@ long_mode:
     mov rsp, 0x90000
     mov rsi, 0x20000
     mov rdi, 0x100000
-    mov rcx, 16384
+    mov rcx, 30720
     rep movsb
-
     mov rax, 0x100000
     jmp rax

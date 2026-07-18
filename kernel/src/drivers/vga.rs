@@ -21,54 +21,86 @@ macro_rules! println {
     }};
 }
 
-const BLANK: ScreenChar = ScreenChar {
-    ascii_code: b' ',
-    color_code: ColorCode::new(Color::White, Color::Black),
-};
-const BUFFER_HEIGHT: usize = 25;
-const BUFFER_WIDTH: usize = 80;
-const BUFFER_ADDR: usize = 0xB8000;
+const FB_VIRT_ADDR: usize = 0xA00000;
+const FONT_DATA: &[u8; 16384] = include_bytes!("font_ter16x32.bin");
+
+pub fn get_width() -> u32 { unsafe { *(0x7008 as *const u32) } }
+pub fn get_height() -> u32 { unsafe { *(0x700C as *const u32) } }
+pub fn get_pitch() -> u32 { unsafe { *(0x7010 as *const u32) } }
+
+fn get_buffer_width() -> usize { (get_width() / 16) as usize }
+fn get_buffer_height() -> usize { (get_height() / 32) as usize }
+
+fn draw_pixel(x: u32, y: u32, color: u32) {
+    let width = get_width();
+    let height = get_height();
+    if x >= width || y >= height {
+        return;
+    }
+    let pitch = get_pitch();
+    let offset = (y * pitch + x * 4) as usize;
+    unsafe {
+        *((FB_VIRT_ADDR + offset) as *mut u32) = color;
+    }
+}
+
+fn draw_char(c: u8, x: u32, y: u32, fg_color: u32, bg_color: u32) {
+    let offset = (c as usize) * 64;
+    for row in 0..32 {
+        let byte1 = FONT_DATA[offset + row * 2];
+        let byte2 = FONT_DATA[offset + row * 2 + 1];
+        let row_data = ((byte1 as u32) << 8) | (byte2 as u32);
+        for col in 0..16 {
+            let bit = (row_data >> (15 - col)) & 1;
+            let color = if bit == 1 { fg_color } else { bg_color };
+            draw_pixel(x + col as u32, y + row as u32, color);
+        }
+    }
+}
 
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
     column: 0,
     row:    0,
-    color:  ColorCode::new(Color::White, Color::Black),
+    color:  ColorCode {
+        fg: Color::White as u32,
+        bg: Color::Black as u32,
+    },
 });
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
-    Black        = 0x00,
-    Blue         = 0x01,
-    Green        = 0x02,
-    Cyan         = 0x03,
-    Red          = 0x04,
-    Magenta      = 0x05,
-    Brown        = 0x06,
-    LightGrey    = 0x07,
-    DarkGrey     = 0x08,
-    LightBlue    = 0x09,
-    LightGreen   = 0x0A,
-    LightCyan    = 0x0B,
-    LightRed     = 0x0C,
-    LightMagenta = 0x0D,
-    Yellow       = 0x0E,
-    White        = 0x0F,
+    Black        = 0x00000000,
+    Blue         = 0x000000AA,
+    Green        = 0x0000AA00,
+    Cyan         = 0x0000AAAA,
+    Red          = 0x00AA0000,
+    Magenta      = 0x00AA00AA,
+    Brown        = 0x00AA5500,
+    LightGrey    = 0x00AAAAAA,
+    DarkGrey     = 0x00555555,
+    LightBlue    = 0x005555FF,
+    LightGreen   = 0x0055FF55,
+    LightCyan    = 0x0055FFFF,
+    LightRed     = 0x00FF5555,
+    LightMagenta = 0x00FF55FF,
+    Yellow       = 0x00FFFF55,
+    White        = 0x00FFFFFF,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct ColorCode(u8);
+pub struct ColorCode {
+    pub fg: u32,
+    pub bg: u32,
+}
 
 impl ColorCode {
     pub const fn new(foreground: Color, background: Color) -> Self {
-        let color = ((background as u8) << 4) | ((foreground as u8) & 0x0F);
-        Self(color)
+        ColorCode {
+            fg: foreground as u32,
+            bg: background as u32,
+        }
     }
-}
-#[repr(C)]
-pub struct ScreenChar {
-    ascii_code: u8,
-    color_code: ColorCode,
 }
 
 pub struct Writer {
@@ -79,62 +111,60 @@ pub struct Writer {
 
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
-        let buffer = BUFFER_ADDR as *mut ScreenChar;
-        let offset = self.row * BUFFER_WIDTH + self.column;
-
         if byte == 8 {
             if self.column > 0 {
                 self.column -= 1;
-                let offset_bs = self.row * BUFFER_WIDTH + self.column;
-                unsafe {
-                    buffer.add(offset_bs).write(BLANK);
-                }
+                let x = (self.column * 16) as u32;
+                let y = (self.row * 32) as u32;
+                draw_char(b' ', x, y, self.color.fg, self.color.bg);
             }
             return;
         }
-
         if byte == b'\n' {
             self.column = 0;
             self.row += 1;
+            self.check_scroll();
             return;
         }
-        unsafe {
-            buffer.add(offset).write(ScreenChar {
-                ascii_code: byte,
-                color_code: self.color,
-            });
-        }
-
+        let x = (self.column * 16) as u32;
+        let y = (self.row * 32) as u32;
+        draw_char(byte, x, y, self.color.fg, self.color.bg);
         self.column += 1;
-        if self.column >= BUFFER_WIDTH {
+        if self.column >= get_buffer_width() {
             self.column = 0;
             self.row += 1;
         }
-        if self.row >= BUFFER_HEIGHT {
-            for i in 0..(BUFFER_HEIGHT - 1) {
-                for j in 0..BUFFER_WIDTH {
-                    unsafe {
-                        let current = buffer.add(BUFFER_WIDTH * (i + 1) + j).read();
-                        buffer.add(BUFFER_WIDTH * i + j).write(current);
-                    }
+        self.check_scroll();
+    }
+
+    fn check_scroll(&mut self) {
+        if self.row >= get_buffer_height() {
+            let fb = FB_VIRT_ADDR as *mut u32;
+            let row_bytes = (get_pitch() * 32) / 4;
+            let total_pixels = (get_pitch() * get_height()) / 4;
+            unsafe {
+                core::ptr::copy(
+                    fb.add(row_bytes as usize),
+                    fb,
+                    (total_pixels - row_bytes) as usize,
+                );
+                let start = (total_pixels - row_bytes) as usize;
+                for i in start..(total_pixels as usize) {
+                    fb.add(i).write(self.color.bg);
                 }
             }
-            for k in 0..BUFFER_WIDTH {
-                unsafe {
-                    buffer
-                        .add((BUFFER_HEIGHT - 1) * BUFFER_WIDTH + k)
-                        .write(BLANK);
-                }
-            }
-            self.row = 24;
+            self.row = get_buffer_height() - 1;
             self.column = 0;
         }
     }
 
     pub fn clear_screen(&mut self) {
-        let buffer = BUFFER_ADDR as *mut ScreenChar;
-        for i in 0..(BUFFER_HEIGHT * BUFFER_WIDTH) {
-            unsafe { buffer.add(i).write(BLANK) }
+        let fb = FB_VIRT_ADDR as *mut u32;
+        let total_pixels = (get_pitch() * get_height()) / 4;
+        unsafe {
+            for i in 0..(total_pixels as usize) {
+                fb.add(i).write(self.color.bg);
+            }
         }
         self.column = 0;
         self.row = 0;
