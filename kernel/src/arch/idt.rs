@@ -1,5 +1,4 @@
 #![allow(clippy::empty_loop)]
-use crate::{println, HEAP_SIZE, HEAP_START};
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -11,10 +10,12 @@ pub struct Entry {
     pub offset_high:   u32,
     pub reserved:      u32,
 }
+
 #[repr(C)]
 pub struct IDT {
     pub entries: [Entry; 256],
 }
+
 #[repr(C)]
 pub struct InterruptStackFrame {
     pub instruction_pointer: u64,
@@ -26,11 +27,18 @@ pub struct InterruptStackFrame {
 
 #[no_mangle]
 pub extern "x86-interrupt" fn divide_by_zero_handler(_stack_frame: &mut InterruptStackFrame) {
-    println!("Divided by zero");
     loop {}
 }
-pub extern "x86-interrupt" fn invalid_opcode(stack_frame: &mut InterruptStackFrame) {
-    println!("Invalid Opcode at {:#x}", stack_frame.instruction_pointer);
+
+pub extern "x86-interrupt" fn invalid_opcode(_stack_frame: &mut InterruptStackFrame) {
+    for y in 0..100 {
+        for x in 0..100 {
+            let offset = (y * 7680 + x * 4) as usize;
+            unsafe {
+                *((0xA00000 + offset) as *mut u32) = 0xFF00FF;
+            }
+        }
+    }
     loop {}
 }
 
@@ -38,31 +46,27 @@ pub extern "x86-interrupt" fn general_protection_fault(
     _stack_frame: &mut InterruptStackFrame,
     _error_code: u64,
 ) {
-    let vga = 0xB8000 as *mut u8;
-    unsafe {
-        vga.add(0).write(b'G');
-        vga.add(1).write(0x0C);
-        vga.add(2).write(b'P');
-        vga.add(3).write(0x0C);
-        vga.add(4).write(b'F');
-        vga.add(5).write(0x0C);
+    for y in 0..100 {
+        for x in 0..100 {
+            let offset = (y * 7680 + x * 4) as usize;
+            unsafe {
+                *((0xA00000 + offset) as *mut u32) = 0x0000FF;
+            }
+        }
     }
     loop {}
 }
 
 pub extern "x86-interrupt" fn page_fault(_stack_frame: &mut InterruptStackFrame, _error_code: u64) {
-    let fault_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, cr2", out(reg) fault_addr);
+    for y in 0..100 {
+        for x in 0..100 {
+            let offset = (y * 7680 + x * 4) as usize;
+            unsafe {
+                *((0xA00000 + offset) as *mut u32) = 0xFF0000;
+            }
+        }
     }
-
-    let heap_end = (HEAP_START + HEAP_SIZE) as u64;
-    if fault_addr >= HEAP_START as u64 && fault_addr < heap_end {
-        crate::memory::paging::map_page(fault_addr);
-    } else {
-        println!("PAGE FAULT OUTSIDE HEAP!");
-        loop {}
-    }
+    loop {}
 }
 
 pub extern "x86-interrupt" fn time_handler(_stack_frame: &mut InterruptStackFrame) {
@@ -70,18 +74,17 @@ pub extern "x86-interrupt" fn time_handler(_stack_frame: &mut InterruptStackFram
         core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);
     }
 }
+
 pub extern "x86-interrupt" fn keyboard_handler(_stack_frame: &mut InterruptStackFrame) {
     unsafe {
         let scancode: u8;
         core::arch::asm!("in al, 0x60", out("al") scancode);
-
         if let Some(ascii) = crate::drivers::keyboard::scancode_to_ascii(scancode) {
             crate::drivers::keyboard::KEYBOARD_BUFFER.lock().push(ascii);
             if let Some(ref mut sched) = *crate::task::scheduler::SCHEDULER.lock() {
                 sched.unblock_task(1);
             }
         }
-
         core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);
     }
 }
@@ -103,11 +106,13 @@ impl IDT {
         }
     }
 }
+
 #[repr(C, packed)]
 pub struct Pointer {
     limit: u16,
     base:  u64,
 }
+
 impl IDT {
     pub fn load(&self) {
         unsafe {

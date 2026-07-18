@@ -3,7 +3,6 @@
 #![feature(abi_x86_interrupt)]
 
 extern crate alloc;
-use alloc::vec::Vec;
 use core::panic::PanicInfo;
 
 pub const HEAP_START: usize = 0x200000;
@@ -11,6 +10,7 @@ pub const HEAP_SIZE: usize = 0x400000;
 
 pub mod arch;
 pub mod drivers;
+pub mod fs;
 pub mod memory;
 pub mod syscalls;
 pub mod task;
@@ -61,10 +61,8 @@ pub extern "C" fn _start() -> ! {
             .lock()
             .init(HEAP_START, HEAP_SIZE);
     }
-    let mut v = Vec::with_capacity(0x300000);
-    for i in 0..0x300000 {
-        v.push((i & 0xFF) as u8);
-    }
+    fs::init();
+
     let mut scheduler = task::scheduler::Scheduler::new();
     let task_a = create_user_task_shell(1);
     let task_b = create_user_task_silent(2);
@@ -106,7 +104,10 @@ core::arch::global_asm!(
     ".global user_shell_end",
     "user_shell_start:",
     "sub rsp, 96",
+    "5:",
     "mov qword ptr [rsp + 80], 0",
+    "mov rax, 6",
+    "syscall",
     "2:",
     "mov rax, 1",
     "syscall",
@@ -150,59 +151,10 @@ core::arch::global_asm!(
     "lea rdi, [rsp + 88]",
     "mov rax, 0",
     "syscall",
-    "cmp rdx, 4",
-    "jne 5f",
-    "cmp dword ptr [rsp], 0x706c6568",
-    "je 6f",
-    "5:",
-    "cmp rdx, 5",
-    "jne 7f",
-    "cmp dword ptr [rsp], 0x61656c63",
-    "jne 7f",
-    "cmp byte ptr [rsp + 4], 0x72",
-    "je 8f",
-    "7:",
-    "cmp rdx, 5",
-    "jne 9f",
-    "cmp dword ptr [rsp], 0x756f6261",
-    "jne 9f",
-    "cmp byte ptr [rsp + 4], 0x74",
-    "je 10f",
-    "9:",
-    "cmp rdx, 0",
-    "je 11f",
-    "lea rdi, [rip + 12f]",
-    "mov rax, 0",
-    "syscall",
     "lea rdi, [rsp]",
-    "mov rax, 0",
+    "mov rax, 5",
     "syscall",
-    "mov byte ptr [rsp + 88], 10",
-    "mov byte ptr [rsp + 89], 0",
-    "lea rdi, [rsp + 88]",
-    "mov rax, 0",
-    "syscall",
-    "jmp 11f",
-    "6:",
-    "lea rdi, [rip + 13f]",
-    "mov rax, 0",
-    "syscall",
-    "jmp 11f",
-    "8:",
-    "mov rax, 2",
-    "syscall",
-    "jmp 11f",
-    "10:",
-    "lea rdi, [rip + 14f]",
-    "mov rax, 0",
-    "syscall",
-    "jmp 11f",
     "11:",
-    "mov qword ptr [rsp + 80], 0",
-    "jmp 2b",
-    ".align 8",
-    "12: .string \"Comando desconhecido: \"",
-    "13: .string \"Comandos disponiveis: help, clear, about\\n\"",
-    "14: .string \"Meu Kernel Rust OS v1.0 (Modo Multitarefa)\\n\"",
+    "jmp 5b",
     "user_shell_end:"
 );

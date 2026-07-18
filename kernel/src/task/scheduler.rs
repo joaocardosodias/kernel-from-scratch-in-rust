@@ -59,7 +59,7 @@ impl Scheduler {
         self.current_index = next_index;
         let next_task = &self.tasks[self.current_index];
         unsafe {
-            let stack_size = 4096;
+            let stack_size = 16384;
             let top = next_task.kernel_stack.as_ptr() as u64 + stack_size as u64;
             TSS.rsp[0] = top;
             crate::KERNEL_RSP = top;

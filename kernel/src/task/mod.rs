@@ -9,7 +9,7 @@ pub fn start_multitasking() -> ! {
         let mut sched = SCHEDULER.lock();
         let s = sched.as_mut().unwrap();
         let next_task = &s.tasks[0];
-        let stack_size = 4096;
+        let stack_size = 16384;
         let top = next_task.kernel_stack.as_ptr() as u64 + stack_size as u64;
         TSS.rsp[0] = top;
         crate::KERNEL_RSP = top;

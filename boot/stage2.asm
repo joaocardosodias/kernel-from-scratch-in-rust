@@ -12,16 +12,13 @@ _start:
     sti
     mov ax, 0x2401
     int 0x15
-    mov ah, 0x02
-    mov al, 60
-    mov ch, 0
-    mov cl, 4
-    mov dh, 0
+
+    mov si, dap
+    mov ah, 0x42
     mov dl, [drive_num]
-    mov bx, 0x2000
-    mov es, bx
-    xor bx, bx
     int 0x13
+    jc vbe_fail
+
     xor ax, ax
     mov es, ax
     mov di, 0x4000
@@ -96,6 +93,15 @@ vbe_fail:
 
 drive_num: db 0
 
+align 4
+dap:
+    db 0x10
+    db 0
+    dw 120
+    dw 0x0000
+    dw 0x2000
+    dq 3
+
 gdt_start:
     dq 0
 
@@ -145,18 +151,28 @@ protected_mode:
     rep stosd
     mov dword [0x10000], 0x11007
     mov dword [0x11000], 0x12007
-    mov dword [0x12000], 0x000083
+
+    mov ecx, 4
+    mov edi, 0x12000
+    mov eax, 0x000087
+.map_kernel_heap_loop:
+    mov [edi], eax
+    mov dword [edi + 4], 0
+    add eax, 0x200000
+    add edi, 8
+    loop .map_kernel_heap_loop
+
     mov ecx, 4
     mov edi, 0x12028
     mov eax, [0x7000]
     or  eax, 0x87
-
 .map_lfb_loop:
     mov [edi], eax
     mov dword [edi + 4], 0
     add eax, 0x200000
     add edi, 8
     loop .map_lfb_loop
+
     mov eax, 0x10000
     mov cr3, eax
     mov eax, cr4
@@ -181,7 +197,7 @@ long_mode:
     mov rsp, 0x90000
     mov rsi, 0x20000
     mov rdi, 0x100000
-    mov rcx, 30720
+    mov rcx, 61440
     rep movsb
     mov rax, 0x100000
     jmp rax

@@ -1,4 +1,151 @@
 pub mod console;
+use core::fmt::Write;
+
+unsafe fn read_str(ptr: *const u8) -> &'static str {
+    let mut len = 0;
+    while *ptr.add(len) != 0 {
+        len += 1;
+    }
+    let slice = core::slice::from_raw_parts(ptr, len);
+    core::str::from_utf8_unchecked(slice)
+}
+
+fn print_str(s: &str) { let _ = crate::drivers::vga::WRITER.lock().write_str(s); }
+
+fn println_str(s: &str) {
+    print_str(s);
+    print_str("\n");
+}
+
+#[allow(dead_code)]
+fn print_hex(mut val: u64) {
+    if val == 0 {
+        print_str("0");
+        return;
+    }
+    let mut buf = [0u8; 16];
+    let mut idx = 16;
+    while val > 0 {
+        idx -= 1;
+        let digit = (val & 0xF) as u8;
+        buf[idx] = if digit < 10 {
+            b'0' + digit
+        } else {
+            b'A' + (digit - 10)
+        };
+        val >>= 4;
+    }
+    if let Ok(s) = core::str::from_utf8(&buf[idx..]) {
+        print_str(s);
+    }
+}
+
+#[allow(dead_code)]
+fn print_dec(mut val: u64) {
+    if val == 0 {
+        print_str("0");
+        return;
+    }
+    let mut buf = [0u8; 20];
+    let mut idx = 20;
+    while val > 0 {
+        idx -= 1;
+        buf[idx] = b'0' + (val % 10) as u8;
+        val /= 10;
+    }
+    if let Ok(s) = core::str::from_utf8(&buf[idx..]) {
+        print_str(s);
+    }
+}
+
+fn execute_command(cmd_ptr: u64) {
+    let cmd_str = unsafe { read_str(cmd_ptr as *const u8) };
+    let mut parts = cmd_str.split_whitespace();
+    if let Some(cmd) = parts.next() {
+        match cmd {
+            "help" => {
+                println_str("Commands: help, clear, ls, cd, mkdir, touch, cat, mv, pwd");
+            },
+            "clear" => {
+                crate::drivers::vga::WRITER.lock().clear_screen();
+            },
+            "pwd" => {
+                let pwd = crate::fs::FILESYSTEM.lock().pwd();
+                println_str(&pwd);
+            },
+            "ls" => {
+                let items = crate::fs::FILESYSTEM.lock().ls();
+                for (name, is_dir) in items {
+                    print_str(&name);
+                    if is_dir {
+                        println_str("/");
+                    } else {
+                        println_str("");
+                    }
+                }
+            },
+            "cd" => {
+                let path = parts.next().unwrap_or("/");
+                if let Err(e) = crate::fs::FILESYSTEM.lock().cd(path) {
+                    print_str("Error: ");
+                    println_str(e);
+                }
+            },
+            "mkdir" =>
+                if let Some(name) = parts.next() {
+                    if let Err(e) = crate::fs::FILESYSTEM.lock().mkdir(name) {
+                        print_str("Error: ");
+                        println_str(e);
+                    }
+                } else {
+                    println_str("Usage: mkdir <name>");
+                },
+            "touch" =>
+                if let Some(name) = parts.next() {
+                    let content = parts.next().unwrap_or("");
+                    if let Err(e) = crate::fs::FILESYSTEM.lock().touch(name, content.as_bytes()) {
+                        print_str("Error: ");
+                        println_str(e);
+                    }
+                } else {
+                    println_str("Usage: touch <name> [content]");
+                },
+            "cat" =>
+                if let Some(name) = parts.next() {
+                    match crate::fs::FILESYSTEM.lock().cat(name) {
+                        Ok(content) =>
+                            if let Ok(s) = core::str::from_utf8(&content) {
+                                println_str(s);
+                            } else {
+                                println_str("(binary file)");
+                            },
+                        Err(e) => {
+                            print_str("Error: ");
+                            println_str(e);
+                        },
+                    }
+                } else {
+                    println_str("Usage: cat <name>");
+                },
+            "mv" => {
+                let src = parts.next();
+                let dest = parts.next();
+                if let (Some(s), Some(d)) = (src, dest) {
+                    if let Err(e) = crate::fs::FILESYSTEM.lock().mv(s, d) {
+                        print_str("Error: ");
+                        println_str(e);
+                    }
+                } else {
+                    println_str("Usage: mv <source> <destination>");
+                }
+            },
+            _ => {
+                print_str("Unknown command: ");
+                println_str(cmd);
+            },
+        }
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
@@ -19,6 +166,15 @@ pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
     } else if syscall_num == 2 {
         crate::drivers::vga::WRITER.lock().clear_screen();
         0
+    } else if syscall_num == 5 {
+        execute_command(arg1);
+        0
+    } else if syscall_num == 6 {
+        print_str("rust@os:");
+        let pwd = crate::fs::FILESYSTEM.lock().pwd();
+        print_str(&pwd);
+        print_str("$ ");
+        0
     } else {
         1
     }
@@ -28,10 +184,8 @@ pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
 pub unsafe fn init() {
     let efer = rdmsr(0xC0000080);
     wrmsr(0xC0000080, efer | 1);
-
     let star = (0x13u64 << 48) | (0x08u64 << 32);
     wrmsr(0xC0000081, star);
-
     let syscall_entry_addr: u64;
     core::arch::asm!(
         "lea {}, [rip + syscall_entry]",

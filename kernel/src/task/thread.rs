@@ -16,7 +16,7 @@ pub struct Task {
 
 impl Task {
     pub fn new(id: usize, entry_point: u64) -> Self {
-        let stack_size = 4096;
+        let stack_size = 16384;
         let kernel_stack = alloc::vec![0u8; stack_size];
         let user_stack = alloc::vec![0u8; stack_size];
 
