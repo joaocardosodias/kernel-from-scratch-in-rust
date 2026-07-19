@@ -22,7 +22,7 @@ macro_rules! println {
 }
 
 const FB_VIRT_ADDR: usize = 0xA00000;
-const FONT_DATA: &[u8; 16384] = include_bytes!("font_ter16x32.bin");
+const FONT_DATA: &[u8; 16384] = include_bytes!("../assets/font_ter16x32.bin");
 
 pub fn get_width() -> u32 { unsafe { *(0x7008 as *const u32) } }
 pub fn get_height() -> u32 { unsafe { *(0x700C as *const u32) } }

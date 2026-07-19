@@ -77,14 +77,71 @@ pub extern "x86-interrupt" fn time_handler(_stack_frame: &mut InterruptStackFram
 
 pub extern "x86-interrupt" fn keyboard_handler(_stack_frame: &mut InterruptStackFrame) {
     unsafe {
-        let scancode: u8;
-        core::arch::asm!("in al, 0x60", out("al") scancode);
-        if let Some(ascii) = crate::drivers::keyboard::scancode_to_ascii(scancode) {
-            crate::drivers::keyboard::KEYBOARD_BUFFER.lock().push(ascii);
-            if let Some(ref mut sched) = *crate::task::scheduler::SCHEDULER.lock() {
-                sched.unblock_task(1);
+        loop {
+            let status: u8;
+            core::arch::asm!("in al, 0x64", out("al") status);
+
+            if (status & 1) == 0 || (status & 0x20) != 0 {
+                break;
+            }
+
+            let scancode: u8;
+            core::arch::asm!("in al, 0x60", out("al") scancode);
+
+            let is_release = scancode >= 0x80;
+            let make_code = if is_release {
+                scancode - 0x80
+            } else {
+                scancode
+            };
+
+            if let Some(ascii) = crate::drivers::keyboard::scancode_to_ascii(make_code) {
+                let ptr = &mut crate::backrooms::GAME_KEYS[ascii as usize] as *mut bool;
+                core::ptr::write_volatile(ptr, !is_release);
+
+                if !crate::backrooms::IN_GAME {
+                    if !is_release {
+                        crate::drivers::keyboard::KEYBOARD_BUFFER.lock().push(ascii);
+                        if let Some(ref mut sched) = *crate::task::scheduler::SCHEDULER.lock() {
+                            sched.unblock_task(1);
+                        }
+                    }
+                }
             }
         }
+
+        core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);
+    }
+}
+
+pub extern "x86-interrupt" fn mouse_handler(_stack_frame: &mut InterruptStackFrame) {
+    unsafe {
+        loop {
+            let status: u8;
+            core::arch::asm!("in al, 0x64", out("al") status);
+
+            if (status & 1) == 0 || (status & 0x20) == 0 {
+                break;
+            }
+
+            let scancode: u8;
+            core::arch::asm!("in al, 0x60", out("al") scancode);
+
+            if crate::backrooms::IN_GAME {
+                let head_ptr = core::ptr::addr_of_mut!(crate::backrooms::GAME_MOUSE_HEAD);
+                let tail_ptr = core::ptr::addr_of_mut!(crate::backrooms::GAME_MOUSE_TAIL);
+                let head = core::ptr::read_volatile(head_ptr);
+                let tail = core::ptr::read_volatile(tail_ptr);
+                let next = (head + 1) % 256;
+                if next != tail {
+                    let buf_ptr = &mut crate::backrooms::GAME_MOUSE_BUF[head] as *mut u8;
+                    core::ptr::write_volatile(buf_ptr, scancode);
+                    core::ptr::write_volatile(head_ptr, next);
+                }
+            }
+        }
+
+        core::arch::asm!("out 0xA0, al", in("al") 0x20u8 as i8);
         core::arch::asm!("out 0x20, al", in("al") 0x20u8 as i8);
     }
 }

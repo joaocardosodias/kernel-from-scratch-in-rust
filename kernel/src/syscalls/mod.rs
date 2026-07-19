@@ -139,6 +139,9 @@ fn execute_command(cmd_ptr: u64) {
                     println_str("Usage: mv <source> <destination>");
                 }
             },
+            "backrooms" => {
+                crate::backrooms::play_game();
+            },
             _ => {
                 print_str("Unknown command: ");
                 println_str(cmd);
@@ -166,11 +169,17 @@ pub extern "C" fn syscall_handler(syscall_num: u64, arg1: u64) -> u64 {
     } else if syscall_num == 2 {
         crate::drivers::vga::WRITER.lock().clear_screen();
         0
+    } else if syscall_num == 3 {
+        if let Some(ascii) = crate::drivers::keyboard::KEYBOARD_BUFFER.lock().pop() {
+            ascii as u64
+        } else {
+            0
+        }
     } else if syscall_num == 5 {
         execute_command(arg1);
         0
     } else if syscall_num == 6 {
-        print_str("rust@os:");
+        print_str("nome@os:");
         let pwd = crate::fs::FILESYSTEM.lock().pwd();
         print_str(&pwd);
         print_str("$ ");

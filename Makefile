@@ -11,7 +11,7 @@ KERNEL_BIN  := $(BUILD_DIR)/kernel.bin
 DISK_IMG    := $(BUILD_DIR)/disk.img
 
 QEMU        := qemu-system-x86_64
-QEMU_FLAGS  := -drive format=raw,file=$(DISK_IMG) -m 64 -display sdl -vga std -accel kvm -accel tcg
+QEMU_FLAGS  := -drive format=raw,file=$(DISK_IMG) -m 64 -display sdl -vga std -accel kvm -accel tcg -machine pcspk-audiodev=audio0 -audiodev pa,id=audio0
 
 KERNEL_SRC  := $(shell find $(KERNEL_DIR)/src -type f) $(KERNEL_DIR)/Cargo.toml
 
@@ -42,10 +42,10 @@ kernel: $(KERNEL_BIN)
 
 $(DISK_IMG): $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN)
 	cat $(STAGE1_BIN) $(STAGE2_PADDED) $(KERNEL_BIN) > $@
-	truncate -s 128K $@
+	truncate -s 2M $@
 
 run: $(DISK_IMG)
-	$(QEMU) $(QEMU_FLAGS)
+	SDL_AUDIODRIVER=dummy $(QEMU) $(QEMU_FLAGS)
 
 clean:
 	rm -rf $(BUILD_DIR)

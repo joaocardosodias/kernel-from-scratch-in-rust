@@ -1,7 +1,6 @@
 [bits 16]
 [org 0x7C00]
 
-
 _start:
     cli
     xor ax,ax
@@ -21,7 +20,6 @@ _start:
     int 0x13
     jc disk_error
     jmp 0x0000:0x7E00
-
 
 disk_error:
     mov si,msg_error

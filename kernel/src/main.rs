@@ -9,6 +9,7 @@ pub const HEAP_START: usize = 0x200000;
 pub const HEAP_SIZE: usize = 0x400000;
 
 pub mod arch;
+pub mod backrooms;
 pub mod drivers;
 pub mod fs;
 pub mod memory;
@@ -53,6 +54,7 @@ pub extern "C" fn _start() -> ! {
     arch::pic::remap(0x20, 0x28);
     idt.set_entry(32, timer_handler_asm as *const () as u64);
     idt.set_entry(33, arch::idt::keyboard_handler as *const () as u64);
+    idt.set_entry(44, arch::idt::mouse_handler as *const () as u64);
     idt.set_entry(48, yield_handler_asm as *const () as u64);
     idt.load();
     unsafe {
@@ -62,6 +64,7 @@ pub extern "C" fn _start() -> ! {
             .init(HEAP_START, HEAP_SIZE);
     }
     fs::init();
+    drivers::mouse::init();
 
     let mut scheduler = task::scheduler::Scheduler::new();
     let task_a = create_user_task_shell(1);

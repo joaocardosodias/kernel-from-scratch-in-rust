@@ -13,11 +13,23 @@ _start:
     mov ax, 0x2401
     int 0x15
 
+    mov word [dap + 2], 127
+    mov dword [dap + 8], 3
+    mov dword [dap + 12], 0
+    mov word [dap + 4], 0
+    mov word [dap + 6], 0x2000
+    mov cx, 7
+.load_loop:
+    push cx
     mov si, dap
     mov ah, 0x42
     mov dl, [drive_num]
     int 0x13
     jc vbe_fail
+    add dword [dap + 8], 127
+    add word [dap + 6], 0xFE0
+    pop cx
+    loop .load_loop
 
     xor ax, ax
     mov es, ax
@@ -97,7 +109,7 @@ align 4
 dap:
     db 0x10
     db 0
-    dw 120
+    dw 0
     dw 0x0000
     dw 0x2000
     dq 3
@@ -197,7 +209,7 @@ long_mode:
     mov rsp, 0x90000
     mov rsi, 0x20000
     mov rdi, 0x100000
-    mov rcx, 61440
+    mov rcx, 455168
     rep movsb
     mov rax, 0x100000
     jmp rax
